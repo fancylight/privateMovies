@@ -98,15 +98,23 @@ public class ArzonData {
         }
 
         /**
-         * 4.当结束时,执行method0.end()
+         * 4.当结束时,因该执行每个method的end函数
          */
         @Override
         public void end() {
             //整理数据
             String type = localTargetName.substring(localTargetName.lastIndexOf(".") + 1);
-            new File(localTargetName).renameTo(new File(localTargetPath + "../" + other.get("code") + "." + type));
+            String newName = localTargetPath + "../" + other.get("code") + "." + type;
+            new File(localTargetName).renameTo(new File(newName));
             logger.info("处理结束");
-            //1.创建电影对象
+            //1.创建actor对象
+            var actorList = actorData.entrySet().stream().map(t -> {
+                Actor actor = new Actor();
+                actor.setActor_name(ReptileUtil.pathToName(t.getKey()));
+                actor.setActor_pic(t.getValue());
+                return actor;
+            }).collect(Collectors.toList());
+            //2.创建电影对象
             Movie movie = new Movie();
             String codeName = other.get("code");
             LocalDate releaseTime = LocalDate.parse(other.get("releaseTime"));
@@ -119,19 +127,15 @@ public class ArzonData {
             movie.setDesc(desc);
             movie.setLength(Integer.parseInt(lenth));
             movie.setCover(coverData);
+            movie.setActors(actorList);
+            movie.setLocalPath(newName);
             //使用hibernate,如果存在表关联,则需要在各对象间储存时持有正确的关系
-            //2.创建detail对象
+            //3.创建detail对象
             var detailList = detailData.entrySet().stream().map(t -> {
-                MovieDetail detail = new MovieDetail(t.getValue(), movie);
+                MovieDetail detail = new MovieDetail(t.getValue(), movie,ReptileUtil.pathToName(t.getKey()));
                 return detail;
             }).collect(Collectors.toList());
-            //3.创建actor对象
-            var actorList = actorData.entrySet().stream().map(t -> {
-                Actor actor = new Actor();
-                actor.setActor_name(t.getKey());
-                actor.setActor_pic(t.getValue());
-                return actor;
-            }).collect(Collectors.toList());
+
             //最终数据
             result = new Result(actorList, movie, detailList);
         }
@@ -223,9 +227,8 @@ public class ArzonData {
                         if (a.size() != 0) {
                             //演员图片
                             for (Element ea : a) {
-                                //TODO: 进入了ArzonData流程就说明该电影在数据库中不存在,那么至少在localPath目录下要创建关于该电影的 /cover /actor /detail数据 这里要处理的是从那么获取数据
+                                //TODO: 进入了ArzonData流程就说明该电影在数据库中不存在,但是对应的演员可能存在,应该跳过此次下载,但是不处理也可以
                                 //1.爬虫数据
-                                //2.本地数据
                                 actorLink.put(ea.text(), ea.attr("href"));
                                 var actorDown = new ActorMethod(ea.attr("href"));
                                 getInfoByProMethod(response, now, actorDown);
@@ -235,7 +238,7 @@ public class ArzonData {
                             }
                         }
                     } else if (key.equals("品番：")) {
-                        other.put("code", TypeDeal.getACode(tds.get(++index).text()));
+                        other.put("code", ReptileUtil.getACode(TypeDeal.getACode(tds.get(++index).text())));
                     } else if (key.equals("発売日：")) {
                         String time = tds.get(++index).text();
                         String rex = "[0-9]{1,4}/[0-9]{1,2}/[0-9]{1,2}";
@@ -259,16 +262,17 @@ public class ArzonData {
                 }
                 //标题
                 var title = document.select(".detail_title_new2 h1").first().text();
-                title = title.replaceAll(".", "");
+                title = title.replaceAll("\\.", "");
+                title = title.replaceAll("　",""); //这里日文网站的空格,utf8编码为 e3 08 08 而不是asc的20
                 other.put("title", title);
                 //介绍
                 String desc = document.select(".item_text").first().text();
                 other.put("desc", desc);
                 //根据演员创建新目录
-                actorLink.keySet().stream().forEach(t -> {
-                    addNewPath(t + "-");
-                });
-                addNewPath("/detail/");
+                addNewPath( ReptileUtil.createActorDir(actorLink.keySet()) + "/");
+                //作品名
+                addNewPath(ReptileUtil.createTitleCodeDir(other.get("code"), title) + "/");
+                addNewPath("detail/");
                 ReptileUtil.createDir(localTargetPath);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -393,7 +397,7 @@ public class ArzonData {
         arzon0.setHeader("accept-language", "zh-CN,zh;q=0.9");
         arzon0.setHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:64.0) Gecko/20100101 Firefox/64.0");
         arzon0.setHeader("host", arzon0.getHost());
-        String target = ReptileUtil.pathToCode(this.localTargetName);
+        String target = ReptileUtil.pathToName(this.localTargetName);
         var arzon1 = new Arzon1("/itemlist.html?t=all&m=all&s=&q=" + target, host, pro, arzon0.getHeader(), arzon0.getCookies());
         Reptile re = new Reptile(Stream.of(arzon0, arzon1).collect(Collectors.toList()));
         re.init();

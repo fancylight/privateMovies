@@ -1,10 +1,8 @@
 package com.light.privateMovies.pojo;
 
-import com.light.privateMovies.dao.ActorDao;
 import com.light.privateMovies.util.FileUtil;
 
 import javax.persistence.*;
-import java.io.*;
 import java.util.Collections;
 import java.util.List;
 

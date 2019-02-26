@@ -1,5 +1,6 @@
 package com.light.privateMovies.pojo;
 
+
 import javax.persistence.*;
 import java.util.Collections;
 import java.util.List;

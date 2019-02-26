@@ -1,7 +1,6 @@
 package com.light.privateMovies.pojo;
 
 import com.light.privateMovies.util.FileUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.*;
 
@@ -17,7 +16,8 @@ public class MovieDetail {
     @ManyToOne
     @JoinColumn(name = "movie_id")
     Movie movie;
-
+    @Column(name = "name")
+    private String name;
     public Movie getMovie() {
         return movie;
     }
@@ -47,9 +47,20 @@ public class MovieDetail {
         this.movie = movie;
     }
 
-    public static MovieDetail createMovieDetail(String path, boolean isClassPath, Movie movie) {
-        var md = new MovieDetail(FileUtil.getFileData(path, isClassPath), movie);
-        return md;
+    public String getName() {
+        return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public MovieDetail(byte[] detailPic, Movie movie, String name) {
+        this.detailPic = detailPic;
+        this.movie = movie;
+        this.name = name;
+    }
+
+    public MovieDetail() {
+    }
 }

@@ -1,26 +1,26 @@
 package com.light.privateMovies.service;
 
-
-import com.light.privateMovies.dao.*;
+import com.light.privateMovies.dao.ActorDao;
+import com.light.privateMovies.dao.MovieDao;
+import com.light.privateMovies.dao.MovieDetailDao;
+import com.light.privateMovies.pojo.Movie;
 import com.light.privateMovies.reptile.Result;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Map;
 
-/**
- * 处理关系
- */
 @Service
+@Transactional
 public class ReService {
-    Logger logger = LogManager.getLogger(ReService.class);
     private ActorDao actorDao;
     private MovieDao movieDao;
-    private MovieTypeDao movieTypeDao;
-    private ModuleTypeDao moduleTypeDao;
-    private ModuleDao moduleDao;
     private MovieDetailDao movieDetailDao;
+    Logger logger = LogManager.getLogger(ReService.class);
 
     @Autowired
     public void setActorDao(ActorDao actorDao) {
@@ -30,21 +30,6 @@ public class ReService {
     @Autowired
     public void setMovieDao(MovieDao movieDao) {
         this.movieDao = movieDao;
-    }
-
-    @Autowired
-    public void setMovieTypeDao(MovieTypeDao movieTypeDao) {
-        this.movieTypeDao = movieTypeDao;
-    }
-
-    @Autowired
-    public void setModuleTypeDao(ModuleTypeDao moduleTypeDao) {
-        this.moduleTypeDao = moduleTypeDao;
-    }
-
-    @Autowired
-    public void setModuleDao(ModuleDao moduleDao) {
-        this.moduleDao = moduleDao;
     }
 
     @Autowired
@@ -66,5 +51,27 @@ public class ReService {
         actorDao.setListData(result.getActor());
         movieDao.add(result.getMovie());
         movieDetailDao.setListData(result.getMovieDetail());
+    }
+
+    /**
+     * 获取一些必要的数据
+     */
+    public Map<String, List<Movie>> getMovieAndPath() {
+        return movieDao.getNameAndPath();
+    }
+
+    public void updateMoviePath(String newPath, String movieName) {
+        Movie movie = new Movie();
+        movie.setLocalPath(newPath);
+        movie.setMovieName(movieName);
+        movieDao.update(movie);
+    }
+
+    public void updateMoviePath(Movie movie) {
+        movieDao.update(movie);
+    }
+
+    public Movie getMovieByName(String movieName) {
+        return movieDao.getMovieByMovieName(movieName);
     }
 }

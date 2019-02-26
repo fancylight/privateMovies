@@ -1,6 +1,9 @@
 package com.light.privateMovies.util;
 
+import com.light.privateMovies.util.fileTargetDeal.AbstractFileDeal;
+
 import java.io.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 public class FileUtil {
@@ -38,7 +41,7 @@ public class FileUtil {
      * @param targetType
      * @param parentPath
      */
-    public static void scanDir(FileDealInterface fileDealInterface, String path, String targetType[], String parentPath) {
+    public static void scanDir(AbstractFileDeal fileDealInterface, String path, String targetType[], String parentPath) {
         File file = new File(path);
         if (file.isDirectory()) {
             var files = file.listFiles();
@@ -49,6 +52,32 @@ public class FileUtil {
             fileDealInterface.deal(file, targetType, parentPath);
         } else return;
     }
+
+    /**
+     * @param fileDealInterface
+     * @param path
+     * @param targetType
+     * @param parentPath
+     * @param isDelete          表示是否删除未匹配目标文件夹
+     * @return 是否有匹配
+     * //TODO: 这样不能实现我要的目的,比如说   xx.avi detail cover ,该函数执行后会将detail cover文件夹也视为不匹配
+     */
+//    public static boolean scanDir(AbstractFileDeal fileDealInterface, String path, String targetType[], String parentPath, boolean isDelete) {
+//        File file = new File(path);
+//        if (file.isDirectory()) {
+//            var files = file.listFiles();
+//            AtomicBoolean hasTarget = new AtomicBoolean(false);
+//            Stream.of(files).forEach(t -> {
+//                if (!scanDir(fileDealInterface, t.getPath(), targetType, file.getPath(), isDelete)) {
+//                    t.delete();
+//                } else hasTarget.set(true);
+//            });
+//            return hasTarget.get();
+//        } else if (file.isFile()) {
+//            return fileDealInterface.deal(file, targetType, parentPath);
+//        }
+//        return false;//此时说明文件不存在,自然返回false
+//    }
 
     /**
      * 拷贝文件到目的
@@ -86,7 +115,7 @@ public class FileUtil {
         try {
             while ((len = in0.read(buf)) != -1) {
                 out.write(buf, 0, len);
-                buf=new byte[1024];
+                buf = new byte[1024];
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -96,6 +125,7 @@ public class FileUtil {
 
     /**
      * 写
+     *
      * @param srcBytes
      * @param dest
      */
@@ -109,4 +139,5 @@ public class FileUtil {
             e.printStackTrace();
         }
     }
+
 }

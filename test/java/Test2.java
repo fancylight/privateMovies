@@ -1,5 +1,5 @@
 import com.light.privateMovies.module.TypeDeal;
-import com.light.privateMovies.util.FileDealInterface;
+import com.light.privateMovies.util.fileTargetDeal.AbstractFileDeal;
 import com.light.privateMovies.util.FileUtil;
 import org.testng.annotations.Test;
 
@@ -9,7 +9,6 @@ import java.io.FileNotFoundException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,7 +39,7 @@ public class Test2 {
 
     @Test
     public void test() throws ClassNotFoundException {
-        FileUtil.scanDir(new FileDealInterface() {
+        FileUtil.scanDir(new AbstractFileDeal() {
             @Override
             public void deal(File file, String[] targetType, String parentPath) {
                 System.out.println(parentPath + File.separator + file.getName());
@@ -74,4 +73,5 @@ public class Test2 {
     public void regexTest() {
         System.out.println(TypeDeal.getACode("ABS-128  廃盤"));
     }
+
 }

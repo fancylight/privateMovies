@@ -1,5 +1,9 @@
 package com.light.privateMovies.pojo;
 
+
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+
 import javax.persistence.*;
 import java.time.LocalDate;
 import java.util.Collections;
@@ -11,20 +15,20 @@ public class Movie {
     @Id
     @GeneratedValue
     private Integer id;
-    @Column(name = "movie_name", columnDefinition = "varchar(20)")
+    @Column(name = "movie_name")
     private String movieName;
     @Lob
     @Column(name = "movie_cover", columnDefinition = "mediumblob")
     private byte[] cover;
     @Column(name = "description", columnDefinition = "text")
     private String desc;
-    @Column(name = "title", columnDefinition = "varchar(100)")
+    @Column(name = "title")
     private String title;
-    @Column(name = "releaseTime", columnDefinition = "DATE")
+    @Column(name = "releaseTime")
     private LocalDate releaseTime;
     @Column(name = "length", columnDefinition = "int")
     private Integer length;
-    @Column(name = "local_path", columnDefinition = "varchar(30)")
+    @Column(name = "local_path")
     private String localPath;
 
     public Integer getLength() {
@@ -43,7 +47,8 @@ public class Movie {
         this.releaseTime = releaseTime;
     }
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SUBSELECT)
     @JoinTable(
             name = "movie_movie_type_table",   //中间表名称
             joinColumns = @JoinColumn(name = "movie_id"), //该表在关系表中的键
@@ -52,7 +57,7 @@ public class Movie {
     List<MovieType> movieTypes;
 
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)  //不使用懒加载
     @JoinTable(
             name = "movie_actor_table",
             joinColumns = @JoinColumn(name = "movie_id"),
@@ -61,7 +66,8 @@ public class Movie {
     List<Actor> actors;
 
 
-    @OneToMany(mappedBy = "movie")
+    @OneToMany(mappedBy = "movie",fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SUBSELECT)
     List<MovieDetail> movieDetails;
 
     public String getTitle() {

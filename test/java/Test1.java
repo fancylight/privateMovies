@@ -7,6 +7,7 @@ import org.springframework.test.context.testng.AbstractTransactionalTestNGSpring
 import org.springframework.transaction.annotation.Transactional;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
+
 @Transactional  //设置事务
 @ContextConfiguration("classpath*:/spring.xml") //启动spring容器
 @Rollback(false) //指定测试不自动回滚
@@ -54,7 +55,6 @@ public class Test1 extends AbstractTransactionalTestNGSpringContextTests {
         this.movieTypeDao = movieTypeDao;
     }
 
-    @BeforeTest
     public void init() {
         actor = Actor.createActor("测试", "/pic/阿部乃みく.jpg", true);
         movie = new Movie();
@@ -62,13 +62,13 @@ public class Test1 extends AbstractTransactionalTestNGSpringContextTests {
         movie.setMovieName("测试电影");
         module = new ModuleEntry("test", "H:\\temp4", null);
         moduleType = new ModuleType("avTemp", null);
-        movieDetail = MovieDetail.createMovieDetail("/1496604P-01.jpg", true, movie);
+//        movieDetail = MovieDetail.createMovieDetail("/1496604P-01.jpg", true, movie);
         movieType = new MovieType("巨乳", null);
     }
 
     @Test
     public void test() {
-
+        System.out.println("1123");
     }
 
     @Test
@@ -76,7 +76,7 @@ public class Test1 extends AbstractTransactionalTestNGSpringContextTests {
         //添加时无关系
         this.movieTypeDao.add(movieType);
         this.movieDao.add(movie);
-        var x=3;
+        var x = 3;
     }
 
     @Test
@@ -89,4 +89,5 @@ public class Test1 extends AbstractTransactionalTestNGSpringContextTests {
         movie.setSimpleType(movieTypeDao.getTypeByName("巨乳"));
         movieDao.update(movie);
     }
+
 }

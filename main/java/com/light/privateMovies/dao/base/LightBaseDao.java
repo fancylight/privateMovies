@@ -1,13 +1,19 @@
 package com.light.privateMovies.dao.base;
 
+import org.hibernate.query.Query;
+import org.springframework.orm.hibernate5.HibernateCallback;
 import org.springframework.orm.hibernate5.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.Id;
 import java.io.Serializable;
-import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
 
 @Repository
 public class LightBaseDao<T> implements BaseDao<T> {
@@ -79,7 +85,70 @@ public class LightBaseDao<T> implements BaseDao<T> {
         }
     }
 
+
     public void setListData(List<T> listData) {
         listData.stream().forEach(t -> add(t));
+    }
+
+    /**
+     * HQL语句 查询如 "SELECT movieName,localPath FROM com.xxx.Movie" column和table都是指的是对象不是数据表
+     *
+     * @param columnName 查询的对象属性
+     * @return 返回包含T对象的list
+     */
+    public List<T> getPartData(String[] columnName) {
+        //获取
+        String tableName = "";
+        tableName = clazz.getName();
+
+        String finalTableName = tableName;//实际上这是个final,如果此时给该值赋值,则内部类异常
+
+        return hibernateTemplate.execute((HibernateCallback<List<T>>) session -> {
+            String hql = "select ";
+            for (String col : columnName) {
+                hql += col + ",";
+            }
+            hql = hql.substring(0, hql.lastIndexOf(","));
+            hql += " from " + finalTableName;
+            Query qu = session.createQuery(hql);
+            List<Object[]> l = qu.list(); //返回List<>,其中每个都是包含字段值的Object[]
+            //构造器
+            Constructor<T> constructor = null;
+            try {
+                constructor = clazz.getDeclaredConstructor();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            }
+            Constructor<T> finalConstructor = constructor;
+            //赋值部分
+            List<Field> fs = new ArrayList<>();
+            for (String col : columnName) {
+                try {
+                    var f = clazz.getDeclaredField(col);
+                    f.setAccessible(true);
+                    fs.add(f);
+                } catch (NoSuchFieldException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            return l.stream().map(t -> {
+                T t1 = null;
+                try {
+                    t1 = finalConstructor.newInstance();
+                    for (int index = 0; index < fs.size(); index++) {
+
+                        fs.get(index).set(t1, t[index]);
+                    }
+                } catch (InstantiationException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                } catch (InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+                return t1;
+            }).collect(Collectors.toList());
+        });
     }
 }

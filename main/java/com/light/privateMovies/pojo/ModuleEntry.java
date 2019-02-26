@@ -1,5 +1,6 @@
 package com.light.privateMovies.pojo;
 
+
 import javax.persistence.*;
 
 @Entity
@@ -10,7 +11,7 @@ public class ModuleEntry {
     private Integer id;
     @Column(name = "module_name", unique = true, columnDefinition = "varchar(20)")
     private String moduleName;
-    @Column(name = "localPath", columnDefinition = "varchar(30)")
+    @Column(name = "localPath")
     private String localPath;
     @ManyToOne
     @JoinColumn(name = "module_type_id")
