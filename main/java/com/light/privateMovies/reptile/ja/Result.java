@@ -1,4 +1,4 @@
-package com.light.privateMovies.reptile;
+package com.light.privateMovies.reptile.ja;
 
 import com.light.privateMovies.pojo.Actor;
 import com.light.privateMovies.pojo.Movie;

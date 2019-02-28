@@ -1,13 +1,9 @@
-package com.light.privateMovies.reptile;
+package com.light.privateMovies.reptile.core;
 
-import com.light.privateMovies.dao.ActorDao;
-import com.light.privateMovies.dao.MovieDao;
-import com.light.privateMovies.dao.MovieDetailDao;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -15,6 +11,24 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.util.*;
 
+/**
+ * 1.该架构有很多改进的地方
+ * 2.由于jdk本身的问题,总是采用本地dns解析,因此即使通过sock5代理,dns污染还是存在,因此解决方式:
+ * https://www.ultratools.com/tools/ipWhoisLookupResult
+ * 通过外网查询ip,保存在hosts文件中
+ * 3.有趣的问题是如果该网站使用了cloudflare:
+ * cloudflare工作原理
+ * <p>
+ * <p>
+ * client  <--------->    cloudflare  <-------------> server
+ * a.首先我们访问的url被解析成的ip实际是cloudflare,而cloudflare则知道真实server的ip,当然了cloudflare也许还有一些目标服务器的缓冲,
+ * 以减少服务器的压力;
+ * b.举个例子
+ * 104.24.20.64 www.javbus.com 是我查到的ip,这个ip的确对应的是www.javbus.com,但是如果直接通过浏览器访问104.24.20.64,则会导致
+ * Error 1003,原因在于此时请求头host:104.24.20.64,远端的cloudflare会拒绝请求.
+ * 修改方式就是将host:www.javbus.com
+ * c.使用jsoup直接访问 www.javbus.com 并且提前修改hosts文件就能正确访问
+ */
 @Service
 public class Reptile implements ReptileDataInterface {
 
@@ -108,10 +122,17 @@ public class Reptile implements ReptileDataInterface {
             if (dealWithCode(res.statusCode(), url)) { //正常请求
                 methods.get(deep).deal(res, methods, deep, this);
                 nowDeep = methods.get(deep).afterDoc(res, this, deep, methods);
+                //增加一个可以提前跳出的途径
+                int x = 0;
+                if (methods.get(deep).getEnd())
+                    x = methods.get(deep).end();
+                if (x == -1)
+                    return;
             } else {
                 //跳过此次处理
                 nowDeep++;
             }
+
             if (nowDeep >= methods.size()) {
                 methods.get(0).end();
             } else {

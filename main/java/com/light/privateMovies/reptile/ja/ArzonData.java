@@ -1,11 +1,14 @@
-package com.light.privateMovies.reptile;
+package com.light.privateMovies.reptile.ja;
 
 
 import com.light.privateMovies.module.TypeDeal;
 import com.light.privateMovies.pojo.Actor;
 import com.light.privateMovies.pojo.Movie;
 import com.light.privateMovies.pojo.MovieDetail;
+import com.light.privateMovies.reptile.core.Reptile;
+import com.light.privateMovies.reptile.core.ReptileUtil;
 import com.light.privateMovies.reptile.annotation.Step;
+import com.light.privateMovies.reptile.core.StepMethod;
 import com.light.privateMovies.util.FileUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,6 +26,10 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * 最终获取 演员 电影 详情页信息
+ */
+@Step(url = "https://www.arzon.jp/")
 public class ArzonData {
 
     private static Logger logger = LogManager.getLogger(ArzonData.class);
@@ -101,12 +108,13 @@ public class ArzonData {
          * 4.当结束时,因该执行每个method的end函数
          */
         @Override
-        public void end() {
+        public int end() {
             //整理数据
             String type = localTargetName.substring(localTargetName.lastIndexOf(".") + 1);
             String newName = localTargetPath + "../" + other.get("code") + "." + type;
             new File(localTargetName).renameTo(new File(newName));
             logger.info("处理结束");
+            //todo: 提前终止就不会执行这里
             //1.创建actor对象
             var actorList = actorData.entrySet().stream().map(t -> {
                 Actor actor = new Actor();
@@ -132,12 +140,13 @@ public class ArzonData {
             //使用hibernate,如果存在表关联,则需要在各对象间储存时持有正确的关系
             //3.创建detail对象
             var detailList = detailData.entrySet().stream().map(t -> {
-                MovieDetail detail = new MovieDetail(t.getValue(), movie,ReptileUtil.pathToName(t.getKey()));
+                MovieDetail detail = new MovieDetail(t.getValue(), movie, ReptileUtil.pathToName(t.getKey()));
                 return detail;
             }).collect(Collectors.toList());
 
             //最终数据
             result = new Result(actorList, movie, detailList);
+            return -1;
         }
     }
 
@@ -161,10 +170,16 @@ public class ArzonData {
                 } else {
                     //不存在该电影,写入日志
                     logger.warn("该影片不存在");
+                    setEnding(true);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+
+        @Override
+        public int end() {
+            return -1;
         }
     }
 
@@ -263,13 +278,13 @@ public class ArzonData {
                 //标题
                 var title = document.select(".detail_title_new2 h1").first().text();
                 title = title.replaceAll("\\.", "");
-                title = title.replaceAll("　",""); //这里日文网站的空格,utf8编码为 e3 08 08 而不是asc的20
+                title = title.replaceAll("　", ""); //这里日文网站的空格,utf8编码为 e3 08 08 而不是asc的20
                 other.put("title", title);
                 //介绍
                 String desc = document.select(".item_text").first().text();
                 other.put("desc", desc);
                 //根据演员创建新目录
-                addNewPath( ReptileUtil.createActorDir(actorLink.keySet()) + "/");
+                addNewPath(ReptileUtil.createActorDir(actorLink.keySet()) + "/");
                 //作品名
                 addNewPath(ReptileUtil.createTitleCodeDir(other.get("code"), title) + "/");
                 addNewPath("detail/");
@@ -319,6 +334,7 @@ public class ArzonData {
         @Override
         public void deal(Connection.Response response, List<StepMethod> methods, int deep, Reptile reptile) {
             super.deal(response, methods, deep, reptile);
+            //TODO:看看能不能将picDown修改为独立的,供以后使用
             String path = localTargetPath;
             var buf = FileUtil.getInBytes(response.bodyStream());
             if (picType == PicType.COVER) {

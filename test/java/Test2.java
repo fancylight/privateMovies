@@ -3,6 +3,7 @@ import com.light.privateMovies.util.fileTargetDeal.AbstractFileDeal;
 import com.light.privateMovies.util.FileUtil;
 import org.testng.annotations.Test;
 
+import javax.swing.plaf.metal.OceanTheme;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -72,6 +73,18 @@ public class Test2 {
     @Test
     public void regexTest() {
         System.out.println(TypeDeal.getACode("ABS-128  廃盤"));
+        //abs123-->abs-123
+        String code="CESD721";
+        var m=Pattern.compile("^[a-z|A-Z]{3,5}").matcher(code);
+        String codePart="";
+        if(m.find())
+            codePart=m.group();
+        var m2=Pattern.compile("[0-9]{3,4}$").matcher(code);
+        String number="";
+        if(m2.find())
+            number=m2.group();
+        System.out.println(codePart);
+        System.out.println(number);
     }
 
 }

@@ -5,6 +5,7 @@ import com.light.privateMovies.dao.ModuleTypeDao;
 import com.light.privateMovies.pojo.ModuleEntry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -14,6 +15,7 @@ import java.util.List;
  * 2.改变模组类型和名称
  */
 @Service
+@Transactional
 public class ModuleService {
     private ModuleDao moduleDao;
     private ModuleTypeDao moduleTypeDao;
@@ -58,5 +60,9 @@ public class ModuleService {
         } else {
             System.out.println("不存在" + type);
         }
+    }
+
+    public List<ModuleEntry> getModuleByName(String name) {
+        return moduleDao.getModuleByName(name);
     }
 }

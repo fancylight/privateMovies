@@ -10,14 +10,18 @@ public class MovieDetail {
     @Id
     @GeneratedValue
     private Integer id;
+
     @Lob
     @Column(name = "detail_pic", columnDefinition = "mediumblob")
     private byte[] detailPic;
+
     @ManyToOne
     @JoinColumn(name = "movie_id")
     Movie movie;
+
     @Column(name = "name")
     private String name;
+    
     public Movie getMovie() {
         return movie;
     }

@@ -65,4 +65,10 @@ public class Actor {
     public void setSimpleMovie(Movie movie){
         setMovies(Collections.singletonList(movie));
     }
+    public void setActor(Actor actor){
+        setId(actor.id);
+        setActor_pic(actor.actor_pic);
+        setActor_name(actor.actor_name);
+        setMovies(actor.movies);
+    }
 }

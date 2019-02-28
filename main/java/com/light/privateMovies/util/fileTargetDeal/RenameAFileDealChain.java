@@ -1,6 +1,6 @@
 package com.light.privateMovies.util.fileTargetDeal;
 
-import com.light.privateMovies.reptile.ReptileUtil;
+import com.light.privateMovies.reptile.core.ReptileUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

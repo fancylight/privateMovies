@@ -6,6 +6,8 @@ import org.springframework.orm.hibernate5.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.Id;
+import javax.persistence.Table;
+
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -43,6 +45,29 @@ public class LightBaseDao<T> implements BaseDao<T> {
     @Override
     public List<T> getAll() {
         return hibernateTemplate.loadAll(clazz);
+    }
+
+    /**
+     * 根据key value 查询指定表数据是否存在
+     *
+     * @param key
+     * @param value
+     * @return
+     */
+    public boolean isExist(String key, String value) {
+        List l = getList(key, value);
+        return l.size() != 0;
+    }
+
+    private List getList(String key, String value) {
+        String tableName = clazz.getAnnotation(Table.class).name();
+        String sql = "select * from " + tableName + " where " + key + " = '" + value + "'";
+        return hibernateTemplate.execute(session -> session.createSQLQuery(sql).list());
+    }
+    //通过某字段返回list
+    public List<T> getListByKeyValue(String key, String value) {
+        List l = getList(key, value);
+        return l;
     }
 
     /**
@@ -92,6 +117,7 @@ public class LightBaseDao<T> implements BaseDao<T> {
 
     /**
      * HQL语句 查询如 "SELECT movieName,localPath FROM com.xxx.Movie" column和table都是指的是对象不是数据表
+     * 查询对象的部分字段
      *
      * @param columnName 查询的对象属性
      * @return 返回包含T对象的list

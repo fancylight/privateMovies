@@ -25,5 +25,23 @@
         <servlet-name>mvc</servlet-name>
         <url-pattern>/</url-pattern>
     </servlet-mapping>
+    <!--设置过滤器,防止由于lazy造成的session提前关闭-->
+    <filter>
+        <filter-name>OpenSessionInViewFilter</filter-name>
+        <filter-class>org.springframework.orm.hibernate5.support.OpenSessionInViewFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>OpenSessionInViewFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <!--过滤图片-->
+    <!--<filter>-->
+        <!--<filter-name>picFilter</filter-name>-->
+        <!--<filter-class>com.light.privateMovies.filter.PicFilter</filter-class>-->
+    <!--</filter>-->
+    <!--<filter-mapping>-->
+        <!--<filter-name>picFilter</filter-name>-->
+        <!--<url-pattern>/picGet/*</url-pattern>-->
+    <!--</filter-mapping>-->
 </web-app>
         

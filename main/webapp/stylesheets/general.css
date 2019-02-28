@@ -1,0 +1,182 @@
+.offset-re-1 {
+    margin-right: 8.333333%;
+}
+
+.offset-re-2 {
+    margin-right: 16.666667%;
+}
+
+.offset--re-3 {
+    margin-right: 25%;
+}
+
+.offset--re-4 {
+    margin-right: 33.333333%;
+}
+
+.offset--re-5 {
+    margin-right: 41.666667%;
+}
+
+.offset--re-6 {
+    margin-right: 50%;
+}
+
+.offset--re-7 {
+    margin-right: 58.333333%;
+}
+
+.offset--re-8 {
+    margin-right: 66.666667%;
+}
+
+.offset--re-9 {
+    margin-right: 75%;
+}
+
+.offset--re-10 {
+    margin-right: 83.333333%;
+}
+
+.offset--re-11 {
+    margin-right: 91.666667%;
+}
+
+/*
+    设置位置为fixed,然后调整到合适的地方
+*/
+.componentx {
+    top: 0;
+    bottom: 0;
+
+    position: fixed;
+
+    overflow-y: scroll;
+
+    overflow-x: hidden;
+}
+
+.component {
+    position: fixed
+}
+
+/**
+     竖着的框
+ */
+.component1 {
+    display: inline-block;
+    position: absolute;
+    height: 100%;
+}
+
+/**
+    设置flex,清除margin
+ */
+.flexNoMarMargin {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap
+}
+
+.title {
+    padding-top: 1.5em;
+    padding-bottom: 1.5em;
+}
+
+#topDivRight {
+    flex-direction: row-reverse;
+}
+
+.icons {
+    color: #e3e3e3;
+}
+
+.icons1 {
+    color: #212121;
+}
+
+/*侧栏相关*/
+.navLeft {
+    z-index: 1999;
+    width: 300px;
+    background: #282828;
+    /*flex-direction: column;*/
+    left: -300px;
+    transform: none;
+}
+
+.navLeft span {
+    color: white;
+}
+
+.navLeft a:hover {
+    text-decoration: none;
+}
+
+/**
+主页图片容器
+ */
+.contentInnerDiv {
+    padding-left: 2%;
+    padding-right: 2%;
+}
+
+/*!***/
+ /*主页显示图片*/
+ /**!*/
+/*.contentInnerDivImage {*/
+    /*background-size: auto, auto;*/
+/*}*/
+
+/**
+取消col-x padding
+ */
+.noPadding {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.flexColumn {
+
+}
+
+#settingNav {
+    overflow: auto;
+    height: 100%;
+}
+
+/**
+setting 左侧a
+ */
+#settingNav a {
+    padding: 8% 33%;
+    height: 50px;
+}
+
+.slide {
+    overflow: auto;
+    height: 100%;
+}
+
+.scrollColumn {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+body {
+    height: 100%;
+}
+
+/*首页上右侧*/
+#topDivRight span{
+    color: white;
+}
+#inputGroupFile01{
+    background-color: white;
+}
+ul li{
+    list-style: none;
+}
+.navWord{
+    color:white;
+}

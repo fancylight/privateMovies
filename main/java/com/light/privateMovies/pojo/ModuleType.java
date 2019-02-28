@@ -15,7 +15,6 @@ public class ModuleType {
     private String typeName;
     @OneToMany(mappedBy = "moduleType") //表示交由维护的属性
             List<ModuleEntry> moduleEntries;
-
     public List<ModuleEntry> getModuleEntries() {
         return moduleEntries;
     }
@@ -58,5 +57,11 @@ public class ModuleType {
 
     public void setSimpleModuleEntry(ModuleEntry m) {
         setModuleEntries(Collections.singletonList(m));
+    }
+
+    public void setModule(ModuleType typeByName) {
+        setId(typeByName.id);
+        setTypeName(typeByName.typeName);
+        setModuleEntries(typeByName.moduleEntries);
     }
 }

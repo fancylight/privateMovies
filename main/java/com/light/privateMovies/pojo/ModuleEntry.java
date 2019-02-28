@@ -1,10 +1,12 @@
 package com.light.privateMovies.pojo;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 
 @Entity
-@Table(name = "modules_table",uniqueConstraints = {@UniqueConstraint(columnNames = "module_name")})
+@Table(name = "modules_table", uniqueConstraints = {@UniqueConstraint(columnNames = "module_name")})
 public class ModuleEntry {
     @Id
     @GeneratedValue
@@ -15,7 +17,9 @@ public class ModuleEntry {
     private String localPath;
     @ManyToOne
     @JoinColumn(name = "module_type_id")
+//    @JsonIgnore
     private ModuleType moduleType;
+
     public Integer getId() {
         return id;
     }
@@ -56,7 +60,8 @@ public class ModuleEntry {
 
     public ModuleEntry() {
     }
-    public void setSimpleModuleType(ModuleType moduleType){
+
+    public void setSimpleModuleType(ModuleType moduleType) {
         setModuleType(moduleType);
     }
 }

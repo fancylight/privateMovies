@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 
 //该实体类表示创建个一个电影视图目录,具有名字和类型编号
 @Repository
@@ -23,10 +25,9 @@ public class ModuleDao extends LightBaseDao<ModuleEntry> {
         return null;
     }
 
-    public ModuleEntry getModuleByName(String name) {
+    public List<ModuleEntry> getModuleByName(String name) {
         var m = new ModuleEntry();
         m.setModuleName(name);
-        var l = getListByExample(m);
-        return l.size() == 0 ? l.get(0) : null;
+        return getListByExample(m);
     }
 }

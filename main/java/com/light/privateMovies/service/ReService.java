@@ -3,8 +3,10 @@ package com.light.privateMovies.service;
 import com.light.privateMovies.dao.ActorDao;
 import com.light.privateMovies.dao.MovieDao;
 import com.light.privateMovies.dao.MovieDetailDao;
+import com.light.privateMovies.dao.MovieTypeDao;
 import com.light.privateMovies.pojo.Movie;
-import com.light.privateMovies.reptile.Result;
+import com.light.privateMovies.pojo.MovieType;
+import com.light.privateMovies.reptile.ja.Result;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,7 @@ public class ReService {
     private ActorDao actorDao;
     private MovieDao movieDao;
     private MovieDetailDao movieDetailDao;
+    private MovieTypeDao movieTypeDao;
     Logger logger = LogManager.getLogger(ReService.class);
 
     @Autowired
@@ -37,6 +40,11 @@ public class ReService {
         this.movieDetailDao = movieDetailDao;
     }
 
+    @Autowired
+    public void setMovieTypeDao(MovieTypeDao movieTypeDao) {
+        this.movieTypeDao = movieTypeDao;
+    }
+
     /**
      * 处理由爬虫获得数据
      * detail--> movie---->actor 这是映射管理的情况
@@ -49,6 +57,7 @@ public class ReService {
     public void saveReptileData(Result result) {
         logger.info("开始存放爬虫数据");
         actorDao.setListData(result.getActor());
+        //此处的问题在于当actor存在就不插入,导致了对应的actor不存在id,也就不算是持久化数据,此时插入movie对象,会导致异常
         movieDao.add(result.getMovie());
         movieDetailDao.setListData(result.getMovieDetail());
     }
@@ -73,5 +82,9 @@ public class ReService {
 
     public Movie getMovieByName(String movieName) {
         return movieDao.getMovieByMovieName(movieName);
+    }
+
+    public void addTypeList(List<MovieType> list) {
+        movieTypeDao.setListData(list);
     }
 }

@@ -1,13 +1,12 @@
 package com.light.privateMovies.init;
 
 
-import com.light.privateMovies.dao.*;
 import com.light.privateMovies.pojo.ModuleEntry;
 import com.light.privateMovies.pojo.Movie;
-import com.light.privateMovies.reptile.ArzonData;
-import com.light.privateMovies.reptile.ConstansPath;
-import com.light.privateMovies.reptile.ReptileUtil;
-import com.light.privateMovies.reptile.Result;
+import com.light.privateMovies.reptile.ja.ArzonData;
+import com.light.privateMovies.reptile.ja.ConstantPath;
+import com.light.privateMovies.reptile.core.ReptileUtil;
+import com.light.privateMovies.reptile.ja.JavData;
 import com.light.privateMovies.service.ModuleService;
 import com.light.privateMovies.service.ReService;
 import com.light.privateMovies.util.fileTargetDeal.AbstractFileDeal;
@@ -17,14 +16,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional
 public class InitService {
     Logger logger = LogManager.getLogger(InitService.class);
 
@@ -84,7 +82,15 @@ public class InitService {
                             //1.不存在
                             if (!targetLocal.keySet().contains(code)) {
                                 var re = new ArzonData(filePath).getReFromArzon();
-                                reService.saveReptileData(re);
+                                if (re != null) {
+                                    var types = new JavData(code).getType();
+                                    reService.addTypeList(types);
+                                    re.getMovie().setCreateTime(LocalDateTime.now());
+                                    re.getMovie().setMovieTypes(types);
+                                    reService.saveReptileData(re);
+                                } else {
+                                    logger.warn(code + "发生未知原因提前终止");
+                                }
                             }//存在
                             else {
                                 //查看是否要执行
@@ -96,9 +102,9 @@ public class InitService {
                                     String actorPath = ReptileUtil.createActorDir(actors);
                                     String moviePath = ReptileUtil.createTitleCodeDir(movie.getMovieName(), movie.getTitle());
                                     String p = parentPath + "/" + actorPath + "/" + moviePath;
-                                    String aP = p + "/" + ConstansPath.ACTOR;
-                                    String dP = p + "/" + ConstansPath.DETAIL;
-                                    String cP = p + "/" + ConstansPath.COVER;
+                                    String aP = p + "/" + ConstantPath.ACTOR;
+                                    String dP = p + "/" + ConstantPath.DETAIL;
+                                    String cP = p + "/" + ConstantPath.COVER;
                                     ReptileUtil.createDir(aP);
                                     ReptileUtil.createDir(dP);
                                     ReptileUtil.createDir(cP);

@@ -5,7 +5,6 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.testng.AbstractTransactionalTestNGSpringContextTests;
 import org.springframework.transaction.annotation.Transactional;
-import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 @Transactional  //设置事务
@@ -56,7 +55,7 @@ public class Test1 extends AbstractTransactionalTestNGSpringContextTests {
     }
 
     public void init() {
-        actor = Actor.createActor("测试", "/pic/阿部乃みく.jpg", true);
+        actor = Actor.createActor("测试", "/pic/1.jpg", true);
         movie = new Movie();
 //        movie.setActors(Stream.of(actor).collect(Collectors.toList()));
         movie.setMovieName("测试电影");

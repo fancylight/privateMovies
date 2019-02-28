@@ -10,3 +10,5 @@ gen
 /main/resources/
 /test/java/
 
+/main/webapp/
+!/main/webapp/javascripts/

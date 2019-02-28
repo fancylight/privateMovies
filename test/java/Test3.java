@@ -1,5 +1,5 @@
 import com.light.privateMovies.pojo.Movie;
-import com.light.privateMovies.reptile.ArzonData;
+import com.light.privateMovies.reptile.ja.ArzonData;
 import com.light.privateMovies.reptile.annotation.Step;
 import org.jsoup.Jsoup;
 import org.testng.annotations.Test;
@@ -9,6 +9,11 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Collections;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 @Test
@@ -64,5 +69,17 @@ public class Test3 {
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
         }
+    }
+    //测试filter
+    @Test
+    public void streamFilter(){
+        var list= Stream.of(1,2,3,4).collect(Collectors.toList());
+        //不满足条件去除
+        list.stream().filter(t->t>1).forEach(System.out::println);
+        System.out.println(list);
+    }
+    //时间api
+    public void timeTest(){
+        System.out.println(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
     }
 }

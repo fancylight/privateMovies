@@ -1,4 +1,4 @@
-package com.light.privateMovies.reptile;
+package com.light.privateMovies.reptile.core;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,6 +14,15 @@ public abstract class StepMethod {
     private Map<String, String> header;
     private Map<String, String> cookies;
     private static Logger logger = LogManager.getLogger(StepMethod.class);
+    private boolean ending; //表示是否应该执行
+
+    public boolean isEnding() {
+        return ending;
+    }
+
+    public void setEnding(boolean ending) {
+        this.ending = ending;
+    }
 
     public Map<String, String> getCookies() {
         return cookies;
@@ -101,7 +110,16 @@ public abstract class StepMethod {
     }
 
     //TODO:修改该函数的调用时机,使其符合end的意义,即当reptile框架处理完所有请求,即deep=size()时,依次调用end()
-    public void end() {
+
+    /**
+     * 如果返回-1代表终止整个过程
+     * @return
+     */
+    public int end() {
+        return 0;
     }
 
+    public boolean getEnd() {
+        return isEnding();
+    }
 }

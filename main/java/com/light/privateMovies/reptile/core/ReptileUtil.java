@@ -1,10 +1,29 @@
-package com.light.privateMovies.reptile;
+package com.light.privateMovies.reptile.core;
+
+import com.light.privateMovies.reptile.ja.ConstantPath;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 public class ReptileUtil {
+    private static Map<String, String> browerParas;
+
+    static {
+        browerParas = new HashMap<>();
+        try {
+            Properties prop = new Properties();
+            prop.load(ReptileUtil.class.getResourceAsStream(ConstantPath.BROWSERPARA));
+            prop.entrySet().stream().forEach(t -> browerParas.put((String) t.getKey(), (String) t.getValue()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * 处理如//-->/这些
      */
@@ -67,7 +86,6 @@ public class ReptileUtil {
         }
         return name;
     }
-
     /**
      * @param target 待处理的目标
      * @param regx   要匹配的正则
@@ -93,21 +111,26 @@ public class ReptileUtil {
      */
     public static boolean ifNeedLocal(String path) {
 
-        if (!new File(path + "/" + ConstansPath.COVER).exists())
+        if (!new File(path + "/" + ConstantPath.COVER).exists())
             return true;
-        if (!new File(path + "/" + ConstansPath.DETAIL).exists())
+        if (!new File(path + "/" + ConstantPath.DETAIL).exists())
             return true;
-        if (!new File(path + "/" + ConstansPath.ACTOR).exists())
+        if (!new File(path + "/" + ConstantPath.ACTOR).exists())
             return true;
         return false;
     }
 
     public static String createActorDir(Set<String> actors) {
         String path = actors.stream().reduce(new StringBuffer(), (t, u) -> t.append("-").append(u), StringBuffer::append).toString();
-        return path.substring(path.indexOf("-")+1);
+        return path.substring(path.indexOf("-") + 1);
     }
 
     public static String createTitleCodeDir(String code, String title) {
         return code + "-" + title;
     }
+
+    public static Map<String, String> getBrowerParas() {
+        return browerParas;
+    }
+
 }
