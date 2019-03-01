@@ -8,17 +8,27 @@ public class MovieData {
     private String srt;
     private List<ActorData> actor;
     private String name;
+    private TypeData typeData;
 
-    public MovieData(String picPath, String filePath, String srt, List<ActorData> actor, String name) {
+    public MovieData(String picPath, String filePath, String srt, List<ActorData> actor, String name, TypeData typeData) {
         this.picPath = picPath;
         this.filePath = filePath;
         this.srt = srt;
         this.actor = actor;
         this.name = name;
+        this.typeData = typeData;
     }
 
     public String getPicPath() {
         return picPath;
+    }
+
+    public TypeData getTypeData() {
+        return typeData;
+    }
+
+    public void setTypeData(TypeData typeData) {
+        this.typeData = typeData;
     }
 
     public void setPicPath(String picPath) {

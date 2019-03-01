@@ -75,53 +75,61 @@ public class InitService {
                 public void deal(File file, String[] targetType, String parentPath) {
                     String filePath = file.getPath();
                     //调用重命名
-                    if (ReptileUtil.filterTarget(filePath.substring(filePath.lastIndexOf(".") + 1), target))
+                    if (ReptileUtil.filterTarget(ReptileUtil.getType(filePath), target))
                         if (type.equals("av")) {
+                            //todo:处理字幕文件
                             filePath = (String) renameAFileDealChain.deal(file, targetType, parentPath);
                             var code = ReptileUtil.getACode(filePath);
-                            //1.不存在
-                            if (!targetLocal.keySet().contains(code)) {
-                                var re = new ArzonData(filePath).getReFromArzon();
-                                if (re != null) {
-                                    var types = new JavData(code).getType();
-                                    reService.addTypeList(types);
-                                    re.getMovie().setCreateTime(LocalDateTime.now());
-                                    re.getMovie().setMovieTypes(types);
-                                    reService.saveReptileData(re);
-                                } else {
-                                    logger.warn(code + "发生未知原因提前终止");
+                            if (!code.equals("")) {
+                                //1.不存在
+                                if (!targetLocal.keySet().contains(code)) {
+                                    //获取arzon数据
+                                    var re = new ArzonData(filePath).getReFromArzon();
+                                    if (re != null) {
+                                        //获取jav数据
+                                        var types = new JavData(code).getType();
+                                        reService.addTypeList(types);
+                                        re.getMovie().setCreateTime(LocalDateTime.now());
+                                        re.getMovie().setMovieTypes(types);
+                                        reService.saveReptileData(re);
+                                    } else {
+                                        logger.warn(code + "发生未知原因提前终止");
+                                    }
+                                }//存在
+                                else {
+                                    //查看是否要执行
+                                    if (ReptileUtil.ifNeedLocal(ReptileUtil.fileToPath(filePath))) {
+                                        logger.warn(filePath + "已经存在数据,进行本地转移操作");
+                                        Movie movie = reService.getMovieByName(code);
+                                        //创建三个目录
+                                        Set<String> actors = movie.getActors().stream().map(t -> t.getActor_name()).collect(Collectors.toList()).stream().collect(HashSet::new, HashSet::add, HashSet::addAll);
+                                        String actorPath = ReptileUtil.createActorDir(actors);
+                                        String moviePath = ReptileUtil.createTitleCodeDir(movie.getMovieName(), movie.getTitle());
+                                        String p = parentPath + "/" + actorPath + "/" + moviePath;
+                                        String aP = p + "/" + ConstantPath.ACTOR;
+                                        String dP = p + "/" + ConstantPath.DETAIL;
+                                        String cP = p + "/" + ConstantPath.COVER;
+                                        ReptileUtil.createDir(aP);
+                                        ReptileUtil.createDir(dP);
+                                        ReptileUtil.createDir(cP);
+                                        //复制detail
+                                        movie.getMovieDetails().stream().forEach(f -> FileUtil.wirteToDest(f.getDetailPic(), dP + "/" + f.getName()+".jpg"));
+                                        //复制cover
+                                        FileUtil.wirteToDest(movie.getCover(), cP + "/" + movie.getMovieName() + ".jpg");
+                                        //复制actor
+                                        movie.getActors().stream().forEach(a -> FileUtil.wirteToDest(a.getActor_pic(), aP + "/" + a.getActor_name() + ".jpg"));
+                                        String newName = dP + "/../" + file.getName();
+                                        //移动
+                                        file.renameTo(new File(newName));
+                                        movie.setLocalPath(newName);
+                                        reService.updateMoviePath(movie);
+                                    }//todo:收集完数据应该对数据库中movie做一次检测,如果对应localPath不存在数据,则标记为本地移除,这要给movie加一个字段
+                                    else {
+                                        //数据库存在,并且本地正确
+                                    }
                                 }
-                            }//存在
-                            else {
-                                //查看是否要执行
-                                if (ReptileUtil.ifNeedLocal(ReptileUtil.fileToPath(filePath))) {
-                                    logger.warn(filePath + "已经存在数据,进行本地转移操作");
-                                    Movie movie = reService.getMovieByName(code);
-                                    //创建三个目录
-                                    Set<String> actors = movie.getActors().stream().map(t -> t.getActor_name()).collect(Collectors.toList()).stream().collect(HashSet::new, HashSet::add, HashSet::addAll);
-                                    String actorPath = ReptileUtil.createActorDir(actors);
-                                    String moviePath = ReptileUtil.createTitleCodeDir(movie.getMovieName(), movie.getTitle());
-                                    String p = parentPath + "/" + actorPath + "/" + moviePath;
-                                    String aP = p + "/" + ConstantPath.ACTOR;
-                                    String dP = p + "/" + ConstantPath.DETAIL;
-                                    String cP = p + "/" + ConstantPath.COVER;
-                                    ReptileUtil.createDir(aP);
-                                    ReptileUtil.createDir(dP);
-                                    ReptileUtil.createDir(cP);
-                                    //复制detail
-                                    movie.getMovieDetails().stream().forEach(f -> FileUtil.wirteToDest(f.getDetailPic(), dP + "/" + f.getName()));
-                                    //复制cover
-                                    FileUtil.wirteToDest(movie.getCover(), cP + "/" + movie.getMovieName() + ".jpg");
-                                    //复制actor
-                                    movie.getActors().stream().forEach(a -> FileUtil.wirteToDest(a.getActor_pic(), aP + "/" + a.getActor_name() + ".jpg"));
-                                    String newName = dP + "/../" + file.getName();
-                                    //移动
-                                    file.renameTo(new File(newName));
-                                    movie.setLocalPath(newName);
-                                    reService.updateMoviePath(movie);
-                                } else {
-
-                                }
+                            } else {
+                                logger.warn(filePath + "不是一个番号");
                             }
                         } else if (type.equals("movie")) {
 

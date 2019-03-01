@@ -56,7 +56,8 @@ public class ReService {
      */
     public void saveReptileData(Result result) {
         logger.info("开始存放爬虫数据");
-        actorDao.setListData(result.getActor());
+        if (result.getActor() != null && result.getActor().size() != 0)
+            actorDao.setListData(result.getActor());
         //此处的问题在于当actor存在就不插入,导致了对应的actor不存在id,也就不算是持久化数据,此时插入movie对象,会导致异常
         movieDao.add(result.getMovie());
         movieDetailDao.setListData(result.getMovieDetail());

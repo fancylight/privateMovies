@@ -124,11 +124,12 @@ public class ArzonData {
             }).collect(Collectors.toList());
             //2.创建电影对象
             Movie movie = new Movie();
-            String codeName = other.get("code");
-            LocalDate releaseTime = LocalDate.parse(other.get("releaseTime"));
-            String title = other.get("title");
-            String desc = other.get("desc");
-            String lenth = other.get("length");
+            String codeName = other.get("code") != null ? other.get("code") : "";
+            String re = other.get("releaseTime") != null ? other.get("releaseTime") : "";
+            LocalDate releaseTime = re.equals("") ? null : LocalDate.parse(re);
+            String title = other.get("title") != null ? other.get("title") : "";
+            String desc = other.get("desc") != null ? other.get("desc") : other.get("desc");
+            String lenth = other.get("length") != null ? other.get("length") : "";
             movie.setMovieName(codeName);
             movie.setReleaseTime(releaseTime);
             movie.setTitle(title);
@@ -243,6 +244,7 @@ public class ArzonData {
                             //演员图片
                             for (Element ea : a) {
                                 //TODO: 进入了ArzonData流程就说明该电影在数据库中不存在,但是对应的演员可能存在,应该跳过此次下载,但是不处理也可以
+
                                 //1.爬虫数据
                                 actorLink.put(ea.text(), ea.attr("href"));
                                 var actorDown = new ActorMethod(ea.attr("href"));
@@ -276,12 +278,20 @@ public class ArzonData {
                     }
                 }
                 //标题
-                var title = document.select(".detail_title_new2 h1").first().text();
-                title = title.replaceAll("\\.", "");
-                title = title.replaceAll("　", ""); //这里日文网站的空格,utf8编码为 e3 08 08 而不是asc的20
+                String title = "";
+                var titleElemnt = document.select(".detail_title_new2 h1").first();
+                if (titleElemnt != null) {
+                    title = titleElemnt.text();
+                    title = title.replaceAll("\\.", "");
+                    title = title.replaceAll("　", ""); //这里日文网站的空格,utf8编码为 e3 08 08 而不是asc的20
+                }
+
                 other.put("title", title);
                 //介绍
-                String desc = document.select(".item_text").first().text();
+                var descElement = document.select(".item_text").first();
+                String desc = "";
+                if (descElement != null)
+                    desc = descElement.text();
                 other.put("desc", desc);
                 //根据演员创建新目录
                 addNewPath(ReptileUtil.createActorDir(actorLink.keySet()) + "/");

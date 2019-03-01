@@ -83,20 +83,38 @@ public class ReptileUtil {
             name = name.replaceAll("-", "");
             name = name.replaceAll("_", "");
             name = name.toUpperCase();
-        }
+        } else
+            name = "";
         return name;
     }
+
     /**
      * @param target 待处理的目标
      * @param regx   要匹配的正则
      * @return <tt>true</tt>表示目标和regx中一个匹配上
      */
     public static boolean filterTarget(String target, String[] regx) {
+        boolean res = false;
         for (String re : regx) {
-            if (Pattern.compile(re).matcher(target).find())
-                return true;
+            if (Pattern.compile(re).matcher(target).find()) {
+                res = true;
+                break;
+            }
         }
-        return false;
+        return res;
+    }
+
+    /**
+     * 返回.后边的后缀,如果没有则返回""
+     *
+     * @param path
+     * @return
+     */
+    public static String getType(String path) {
+        String re = "";
+        if (path.lastIndexOf(".") > 0)
+            return path.substring(path.lastIndexOf(".") + 1);
+        return re;
     }
 
     public static String getSuffix(String fileName) {
@@ -121,6 +139,8 @@ public class ReptileUtil {
     }
 
     public static String createActorDir(Set<String> actors) {
+        if(actors.size()==0)
+            return "null";
         String path = actors.stream().reduce(new StringBuffer(), (t, u) -> t.append("-").append(u), StringBuffer::append).toString();
         return path.substring(path.indexOf("-") + 1);
     }

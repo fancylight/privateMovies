@@ -11,4 +11,4 @@ gen
 /test/java/
 
 /main/webapp/
-!/main/webapp/javascripts/
+/main/webapp/javascripts/

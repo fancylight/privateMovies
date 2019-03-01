@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
@@ -80,6 +81,7 @@ public class Test3 {
     }
     //时间api
     public void timeTest(){
+        System.out.println(LocalDate.parse(""));
         System.out.println(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
     }
 }

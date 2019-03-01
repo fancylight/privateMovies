@@ -6,17 +6,16 @@ import com.light.privateMovies.reptile.ja.ConstantPath;
 import com.light.privateMovies.service.ModuleService;
 import com.light.privateMovies.service.MovieService;
 import com.light.privateMovies.util.FileUtil;
-import com.light.privateMovies.web.pojo.ActorData;
-import com.light.privateMovies.web.pojo.ModuleData;
-import com.light.privateMovies.web.pojo.MovieData;
-import com.light.privateMovies.web.pojo.MoviesData;
+import com.light.privateMovies.web.pojo.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.URLDecoder;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,6 +37,7 @@ public class IndexController {
 
     /**
      * //TODO:看看jackson源码如何转换json的
+     * 首页 获取所有模块相关信息
      *
      * @param moduleName
      * @return
@@ -109,11 +109,59 @@ public class IndexController {
         }
     }
 
+    private int maxBytes = 64 * 1024;
+
+    //H5 VIDEO请求 为 Content-Range: bytes=79036416-
+    @RequestMapping("/movie/{movieName}/{target}")
+    public byte[] playMovieOnH5(@PathVariable(name = "movieName") String movieName, HttpServletResponse response, @RequestHeader(name = "range")String range,HttpServletRequest request) {
+        String real = movieService.getRealPathByName(movieName);
+        if (real.equals(""))
+            return null;
+        long length = new File(real).length();
+        String url=request.getRequestURL().toString();
+        String target=url.substring(url.lastIndexOf("/")+1);
+        String type = target.substring(target.lastIndexOf(".") + 1);
+        //1.处理start-end
+        range = range.replace("bytes=", "");
+        long[] dataRange = new long[2];
+        String[] realRange = range.split("-");
+        dataRange[0] = Long.parseLong(realRange[0]);
+        if (realRange.length == 2) {
+            dataRange[1] = Long.parseLong(realRange[1]);
+        } else {
+            dataRange[1] = length - 1;
+        }
+
+        byte[] buf = new byte[maxBytes];
+        //2.根据距离进行读
+        try {
+            var ra = new RandomAccessFile(new File(real), "r");
+            ra.seek(dataRange[0]);
+            int readLen = ra.read(buf); //返回读取的字节数
+            var out = response.getOutputStream();
+            response.setHeader("Content-Length", "" + readLen);
+            response.setHeader("Content-Type", "video/" + type);
+            response.setHeader("Accept-Ranges", "bytes");
+            response.setHeader("Content-Range", "bytes " + dataRange[0] + "-" + dataRange[1] + "/" + length);
+            response.setStatus(206);
+            out.write(buf, 0, readLen);
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @RequestMapping("/srt/{srtName}")
+    public byte[] getSub(@PathVariable(name = "srtName") String strName, HttpServletRequest request) {
+        return null;
+    }
+
     /**
-     * 返回所有
+     * 返回指定模块的所有电影
      *
-     * @param moduleName
-     * @return
+     * @param moduleName 模块名
+     * @return 电影s
      */
     @RequestMapping("/getMovies")
     public List<MoviesData> getMoviesByModuleName(@RequestParam(name = "moduleName") String moduleName) {
@@ -125,36 +173,78 @@ public class IndexController {
     }
 
     /**
-     * 返回电影通过电影名
-     *
-     * @param movieName
-     * @return
+     * @param movieName 电影名
+     * @return 电影信息
      */
     @RequestMapping("/getMovie")
     public MovieData getMovieByName(@RequestParam(name = "movieName") String movieName) {
         Movie m = movieService.getMovieByName(movieName);
-        var actors = m.getActors().stream().map(t -> {
-            ActorData actorData = new ActorData(getPicPath(m, ConstantPath.ACTOR, t.getActor_name()), t.getActor_name());
-            return actorData;
-        }).collect(Collectors.toList());
-        MovieData movieData = new MovieData(getPicPath(m, ConstantPath.COVER, m.getMovieName()), getMoviePath(m), getSrtPath(m), actors, m.getMovieName());
-        return movieData;
+//        var actors = m.getActors().stream().map(t -> {
+//            ActorData actorData = new ActorData(getPicPath(m, ConstantPath.ACTOR, t.getActor_name()), t.getActor_name());
+//            return actorData;
+//        }).collect(Collectors.toList());
+//        MovieData movieData = new MovieData(getPicPath(m, ConstantPath.COVER, m.getMovieName()), getMoviePath(m), getSrtPath(m), actors, m.getMovieName());
+        return getMovieDataByMovie(m);
     }
 
-    @RequestMapping("showMovies")
+    @RequestMapping("/showMovies")
     public String playMovie(@RequestParam(name = "movieName") String movieName) {
-        String name=movieName.substring(movieName.lastIndexOf("/")+1);
-        name=name.substring(0,name.lastIndexOf("."));
-        var m=movieService.getMovieByName(name);
-        if(m==null)
+        String name = movieName.substring(movieName.lastIndexOf("/") + 1);
+        name = name.substring(0, name.lastIndexOf("."));
+        var m = movieService.getMovieByName(name);
+        if (m == null)
             return "不存在电影";
-        String realPath=m.getLocalPath();
+        String realPath = m.getLocalPath();
         try {
-            Runtime.getRuntime().exec(Constant.LOCALPLAYER+" "+realPath);
+            Runtime.getRuntime().exec(Constant.LOCALPLAYER + " " + realPath);
         } catch (IOException e) {
             e.printStackTrace();
         }
         return "success";
+    }
+
+    /**
+     * 通过特定类型返回电影列表
+     *
+     * @param type
+     * @return
+     */
+    @RequestMapping("/getMoviesByType")
+    public List<MovieData> getMovieByActorName(@RequestParam(name = "type") String type, @RequestParam(name = "data") String data) {
+        List<Movie> movies = new ArrayList<>();
+        if (type.equals("actor"))
+            movies = movieService.getAllMovies().stream().filter(t -> t.getActors().stream().anyMatch(t2 -> t2.getActor_name().equals(data))).collect(Collectors.toList());
+        else if (type.equals("type"))
+            movies = movieService.getAllMovies().stream().filter(t -> t.getMovieTypes().stream().anyMatch(t2 -> t2.getMovieType().contains(data))).collect(Collectors.toList());
+        return movies.stream().map(m -> getMovieDataByMovie(m)).collect(Collectors.toList());
+    }
+
+    /**
+     * 创建movieData数据
+     *
+     * @param movie
+     * @return
+     */
+    private MovieData getMovieDataByMovie(Movie movie) {
+        var m = new MovieData(getPicPath(movie, ConstantPath.COVER, movie.getMovieName()), getMoviePath(movie), getSrtPath(movie), getActorDataByMovie(movie), movie.getMovieName(), getTypeDataBy(movie));
+        return m;
+    }
+
+    /**
+     * 创建ActorData数据
+     *
+     * @param movie
+     * @return
+     */
+    private List<ActorData> getActorDataByMovie(Movie movie) {
+        return movie.getActors().stream().map(actor -> new ActorData(getPicPath(movie, ConstantPath.ACTOR, actor.getActor_name()), actor.getActor_name())).collect(Collectors.toList());
+    }
+
+    /**
+     * 创建typeData
+     */
+    public TypeData getTypeDataBy(Movie movie) {
+        return new TypeData(movie.getMovieTypes().stream().map(t -> t.getMovieType()).collect(Collectors.toList()));
     }
 
     //todo:返回字幕,前台路径为 /srt/{movieName},后台判断有哪些字幕都发送过去

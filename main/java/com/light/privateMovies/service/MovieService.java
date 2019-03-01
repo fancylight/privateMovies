@@ -32,7 +32,11 @@ public class MovieService {
      * @return 如果为null说明电影不存在
      */
     public String getRealPathByName(String name) {
-        Movie m = movieDao.getMovieByMovieName(name);
+        Movie m = null;
+        if (hasBuf)
+            m = movieHashMap.get(name).get(0);
+        else
+        movieDao.getMovieByMovieName(name);
         return m != null ? m.getLocalPath() : "";
     }
 
@@ -55,5 +59,14 @@ public class MovieService {
             return movieDao.getMovieByMovieName(movieName);
         }
         return movieHashMap.get(movieName).get(0);
+    }
+
+    //缓存并获取所有movie list
+    public List<Movie> getAllMovies() {
+        if (!hasBuf) {
+            movieHashMap = movieDao.getAll().stream().collect(Collectors.groupingBy(Movie::getMovieName));
+            hasBuf = true;
+        }
+        return movieHashMap.values().stream().flatMap(t -> t.stream()).collect(Collectors.toList());
     }
 }
