@@ -85,6 +85,9 @@ public class Test2 {
             number=m2.group();
         System.out.println(codePart);
         System.out.println(number);
+        //
+        String ss="H:/temp4/桃乃木かな/KIPX129-【数量限定】ガチファン限定！ファン感謝祭！！ 桃乃木かなと過ごす18発二日温泉オフ会旅行 バレずにこっそり全員分の精子を射精させろ！！/detail/../KIPX129.mp4";
+        System.out.println(ss.replaceAll("/","\\\\"));
     }
 
 }

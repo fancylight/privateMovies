@@ -77,7 +77,7 @@ public class ReptileUtil {
      */
     public static String getACode(String name) {
         name = pathToName(name);
-        var match = Pattern.compile("([a-z]|[A-Z]){3,5}-?_?[0-9]{3}").matcher(name);
+        var match = Pattern.compile("([a-z]|[A-Z]){2,5}-?_?[0-9]{3}").matcher(name);
         if (match.find()) {
             name = match.group();
             name = name.replaceAll("-", "");

@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 @Service
@@ -84,17 +85,18 @@ public class InitService {
                                 //1.不存在
                                 if (!targetLocal.keySet().contains(code)) {
                                     //获取arzon数据
-                                    var re = new ArzonData(filePath).getReFromArzon();
-                                    if (re != null) {
-                                        //获取jav数据
-                                        var types = new JavData(code).getType();
-                                        reService.addTypeList(types);
-                                        re.getMovie().setCreateTime(LocalDateTime.now());
-                                        re.getMovie().setMovieTypes(types);
-                                        reService.saveReptileData(re);
-                                    } else {
-                                        logger.warn(code + "发生未知原因提前终止");
-                                    }
+//                                    var re = new ArzonData(filePath).getReFromArzon();
+//                                    if (re != null) {
+//                                        //获取jav数据
+//                                        var types = new JavData(code).getType();
+//                                        reService.addTypeList(types);
+//                                        re.getMovie().setCreateTime(LocalDateTime.now());
+//                                        re.getMovie().setMovieTypes(types);
+//                                        reService.saveReptileData(re);
+//                                    } else {
+//                                        logger.warn(code + "发生未知原因提前终止");
+//                                    }
+                                    aInitTasks.add(new AInitTask(code, filePath));
                                 }//存在
                                 else {
                                     //查看是否要执行
@@ -113,7 +115,7 @@ public class InitService {
                                         ReptileUtil.createDir(dP);
                                         ReptileUtil.createDir(cP);
                                         //复制detail
-                                        movie.getMovieDetails().stream().forEach(f -> FileUtil.wirteToDest(f.getDetailPic(), dP + "/" + f.getName()+".jpg"));
+                                        movie.getMovieDetails().stream().forEach(f -> FileUtil.wirteToDest(f.getDetailPic(), dP + "/" + f.getName() + ".jpg"));
                                         //复制cover
                                         FileUtil.wirteToDest(movie.getCover(), cP + "/" + movie.getMovieName() + ".jpg");
                                         //复制actor
@@ -137,5 +139,39 @@ public class InitService {
                 }
             }, path, target, "");
         });
+        //收集task完毕执行线程
+        CountDownLatch latch=new CountDownLatch(aInitTasks.size());
+        aInitTasks.parallelStream().forEach(t->{t.task();latch.countDown();});
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private List<AInitTask> aInitTasks = new ArrayList<>();
+
+    class AInitTask {
+        private String code;
+        private String filePath;
+
+        public AInitTask(String code, String filePath) {
+            this.code = code;
+            this.filePath = filePath;
+        }
+
+        public void task() {
+            var re = new ArzonData(filePath).getReFromArzon();
+            if (re != null) {
+                //获取jav数据
+                var types = new JavData(re.getMovie().getMovieName()).getType();
+                reService.addTypeList(types);
+                re.getMovie().setCreateTime(LocalDateTime.now());
+                re.getMovie().setMovieTypes(types);
+                reService.saveReptileData(re);
+            } else {
+                logger.warn(code + "发生未知原因提前终止");
+            }
+        }
     }
 }

@@ -113,13 +113,13 @@ public class IndexController {
 
     //H5 VIDEO请求 为 Content-Range: bytes=79036416-
     @RequestMapping("/movie/{movieName}/{target}")
-    public byte[] playMovieOnH5(@PathVariable(name = "movieName") String movieName, HttpServletResponse response, @RequestHeader(name = "range")String range,HttpServletRequest request) {
+    public byte[] playMovieOnH5(@PathVariable(name = "movieName") String movieName, HttpServletResponse response, @RequestHeader(name = "range") String range, HttpServletRequest request) {
         String real = movieService.getRealPathByName(movieName);
         if (real.equals(""))
             return null;
         long length = new File(real).length();
-        String url=request.getRequestURL().toString();
-        String target=url.substring(url.lastIndexOf("/")+1);
+        String url = request.getRequestURL().toString();
+        String target = url.substring(url.lastIndexOf("/") + 1);
         String type = target.substring(target.lastIndexOf(".") + 1);
         //1.处理start-end
         range = range.replace("bytes=", "");
@@ -217,6 +217,22 @@ public class IndexController {
         else if (type.equals("type"))
             movies = movieService.getAllMovies().stream().filter(t -> t.getMovieTypes().stream().anyMatch(t2 -> t2.getMovieType().contains(data))).collect(Collectors.toList());
         return movies.stream().map(m -> getMovieDataByMovie(m)).collect(Collectors.toList());
+    }
+
+    @RequestMapping("/openDir/movie/{movieName}")
+    public String openDir(@PathVariable(name = "movieName") String movieName) {
+        String real = movieService.getRealPathByName(movieName);
+        real = real.replaceAll("/", "\\\\");
+        real = real.substring(0, real.lastIndexOf("\\"));
+        String re = "";
+        try {
+            Runtime.getRuntime().exec("explorer.exe " + real);
+            re = "正确打开" + real;
+        } catch (IOException e) {
+            e.printStackTrace();
+            re = "异常" + real;
+        }
+        return re;
     }
 
     /**

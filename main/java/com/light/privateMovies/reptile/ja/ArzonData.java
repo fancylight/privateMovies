@@ -10,6 +10,7 @@ import com.light.privateMovies.reptile.core.ReptileUtil;
 import com.light.privateMovies.reptile.annotation.Step;
 import com.light.privateMovies.reptile.core.StepMethod;
 import com.light.privateMovies.util.FileUtil;
+import com.light.privateMovies.web.Constant;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.Connection;
@@ -17,6 +18,7 @@ import org.jsoup.nodes.Element;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -170,7 +172,7 @@ public class ArzonData {
                     methods.add(new Arzion2(a.replace("//", "/"), reptile.getHost(), reptile.getPro(), now.getHeader(), now.getCookies()));
                 } else {
                     //不存在该电影,写入日志
-                    logger.warn("该影片不存在");
+                    logger.warn("该影片不存在"+ this.getPath());
                     setEnding(true);
                 }
             } catch (IOException e) {
@@ -255,7 +257,8 @@ public class ArzonData {
                             }
                         }
                     } else if (key.equals("品番：")) {
-                        other.put("code", ReptileUtil.getACode(TypeDeal.getACode(tds.get(++index).text())));
+                        //fixme:该网站有一些品番：	TKIPX-129  廃盤   TKTABP-720  廃盤  这种情况,导致最终番号显示不正确
+                        other.put("code", ReptileUtil.getACode(tds.get(++index).text()));
                     } else if (key.equals("発売日：")) {
                         String time = tds.get(++index).text();
                         String rex = "[0-9]{1,4}/[0-9]{1,2}/[0-9]{1,2}";
@@ -299,6 +302,8 @@ public class ArzonData {
                 addNewPath(ReptileUtil.createTitleCodeDir(other.get("code"), title) + "/");
                 addNewPath("detail/");
                 ReptileUtil.createDir(localTargetPath);
+                //创建一个演员目录,防止有些没有演员信息的情况导致前边逻辑错误
+                ReptileUtil.createDir(localTargetPath+"../"+ ConstantPath.ACTOR+"/");
             } catch (IOException e) {
                 e.printStackTrace();
             }
