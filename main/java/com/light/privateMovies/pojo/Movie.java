@@ -17,7 +17,7 @@ public class Movie {
     @Id
     @GeneratedValue
     private Integer id;
-    @Column(name = "movie_name")
+    @Column(name = "movie_name",unique = true,columnDefinition = "varchar(40)")
     private String movieName;
     @Lob
     @Column(name = "movie_cover", columnDefinition = "mediumblob")
@@ -78,7 +78,7 @@ public class Movie {
     List<Actor> actors;
 
 
-    @OneToMany(mappedBy = "movie",fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "movie", fetch = FetchType.EAGER)
     @Fetch(FetchMode.SUBSELECT)
     List<MovieDetail> movieDetails;
 

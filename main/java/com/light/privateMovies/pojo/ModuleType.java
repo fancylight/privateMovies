@@ -11,7 +11,7 @@ public class ModuleType {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
-    @Column(name = "type_name",columnDefinition = "varchar(30)")
+    @Column(name = "type_name",columnDefinition = "varchar(30)",unique = true)
     private String typeName;
     @OneToMany(mappedBy = "moduleType") //表示交由维护的属性
             List<ModuleEntry> moduleEntries;

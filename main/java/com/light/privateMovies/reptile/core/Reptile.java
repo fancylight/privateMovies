@@ -144,7 +144,7 @@ public class Reptile implements ReptileDataInterface {
             e.printStackTrace();
             logger.warn("发生socket异常" + e.getMessage());
             if (nowRe-- > 0) {
-                logger.warn("进行重调");
+                logger.warn("进行重调" + url + "次数:" + nowRe);
                 getRe(url, deep);//重调
             } else {
                 logger.warn("重调超过次数总请求退出");

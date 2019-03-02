@@ -54,7 +54,7 @@ public class ReService {
      *
      * @param result
      */
-    public void saveReptileData(Result result) {
+    public synchronized void saveReptileData(Result result) {
         logger.info("开始存放爬虫数据");
         if (result.getActor() != null && result.getActor().size() != 0)
             actorDao.setListData(result.getActor());
@@ -85,7 +85,7 @@ public class ReService {
         return movieDao.getMovieByMovieName(movieName);
     }
 
-    public void addTypeList(List<MovieType> list) {
+    public synchronized void addTypeList(List<MovieType> list) {
         movieTypeDao.setListData(list);
     }
 }

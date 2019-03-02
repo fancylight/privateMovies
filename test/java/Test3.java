@@ -1,6 +1,7 @@
 import com.light.privateMovies.pojo.Movie;
 import com.light.privateMovies.reptile.ja.ArzonData;
 import com.light.privateMovies.reptile.annotation.Step;
+import com.light.privateMovies.reptile.ja.JavData;
 import org.jsoup.Jsoup;
 import org.testng.annotations.Test;
 
@@ -12,7 +13,9 @@ import java.net.Proxy;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -27,10 +30,12 @@ public class Test3 {
     //测试jsoup连接
     @Test
     public void test() throws IOException {
-        var doc = Jsoup.connect("http://www.javlibrary.com/cn/").proxy(new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", 1080))).get();
-        System.out.println(doc.title());
+        var doc = Jsoup.connect("https://pics.javbus.com/cover/6msn_b.jpg").proxy(new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", 1080))).get();
     }
-
+    @Test
+    public void testJav(){
+        new JavData("VRTM360","H:\\1/VRTM360.mp4").getResult();
+    }
     @Test
     public void test2() {
         new ArzonData("H:\\temp4\\AGEMIX-417.mp4").getReFromArzon();
@@ -71,16 +76,18 @@ public class Test3 {
             e.printStackTrace();
         }
     }
+
     //测试filter
     @Test
-    public void streamFilter(){
-        var list= Stream.of(1,2,3,4).collect(Collectors.toList());
+    public void streamFilter() {
+        var list = Stream.of(1, 2, 3, 4).collect(Collectors.toList());
         //不满足条件去除
-        list.stream().filter(t->t>1).forEach(System.out::println);
+        list.stream().filter(t -> t > 1).forEach(System.out::println);
         System.out.println(list);
     }
+
     //时间api
-    public void timeTest(){
+    public void timeTest() {
         System.out.println(LocalDate.parse(""));
         System.out.println(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
     }

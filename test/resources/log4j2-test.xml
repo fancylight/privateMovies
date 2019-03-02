@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--测试使用的-->
 <Configuration status="WARN">
+    <properties>
+        <property name="myLog">I:/</property>
+    </properties>
     <appenders>
-        <properties>
-            <property name="myLog">I:/</property>
-        </properties>
         <console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="[%d{HH:mm:ss:SSS}] [%p] - %l - %m%n"/>
         </console>
@@ -52,11 +52,13 @@
         <!--过滤掉spring和mybatis的一些无用的DEBUG信息-->
         <logger name="org.springframework" level="INFO"></logger>
         <logger name="org.mybatis" level="INFO"></logger>
-        <logger name="org.com.light.privateMovies.reptile">
-            <appender-rel rel="RollingFileWarn"/>
+        <logger name="org.hibernate" level="INFO"></logger>
+        <logger name="Log4jTest">
+            <AppenderRef ref="RollingFileWarn"/>
+            <AppenderRef ref="RollingFileError"/>
         </logger>
         <root level="all">
-            <appender-ref ref="Console"/>
+            <AppenderRef ref="Console"/>
         </root>
     </loggers>
 </Configuration>

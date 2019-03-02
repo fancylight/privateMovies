@@ -35,8 +35,10 @@ public class MovieTypeDao extends LightBaseDao<MovieType> {
     public void setListData(List<MovieType> listData) {
         var li = listData.stream().filter(t -> {
             var re = !isExist("type_name", t.getMovieType());
-            if (!re)
-                t.setMovieType(getTypeByName(t.getMovieType())) ;
+            if (!re) {
+                var tt = getTypeByName(t.getMovieType());
+                t.setMovieType(tt);
+            }
             return re;
         }).collect(Collectors.toList());
         super.setListData(li);

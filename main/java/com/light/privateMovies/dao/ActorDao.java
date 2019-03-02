@@ -41,6 +41,7 @@ public class ActorDao extends LightBaseDao<Actor> {
                        //TODO:这里要么实现一个工具类,要么实现深拷贝,即重写clone函数
                         t.setActor(tt); //这里使用一个简单的方式
                     }
+                    //保留不存在的
                     return re;
                 }
         ).collect(Collectors.toList());

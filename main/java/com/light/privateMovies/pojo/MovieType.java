@@ -11,7 +11,7 @@ public class MovieType {
     @Id
     @GeneratedValue
     private Integer id;
-    @Column(name = "type_name", columnDefinition = "varchar(30)")
+    @Column(name = "type_name", columnDefinition = "varchar(30)",unique = true)
     private String movieType;
     @ManyToMany(mappedBy = "movieTypes")
     List<Movie> movies;
@@ -46,6 +46,10 @@ public class MovieType {
     }
 
     public MovieType() {
+    }
+
+    public MovieType(String movieType) {
+        this.movieType = movieType;
     }
 
     public void setSimpleMovie(Movie movie) {

@@ -111,46 +111,60 @@ public class ArzonData {
          */
         @Override
         public int end() {
-            //整理数据
-            String type = localTargetName.substring(localTargetName.lastIndexOf(".") + 1);
-            String newName = localTargetPath + "../" + other.get("code") + "." + type;
-            new File(localTargetName).renameTo(new File(newName));
-            logger.info("处理结束");
-            //todo: 提前终止就不会执行这里
-            //1.创建actor对象
-            var actorList = actorData.entrySet().stream().map(t -> {
-                Actor actor = new Actor();
-                actor.setActor_name(ReptileUtil.pathToName(t.getKey()));
-                actor.setActor_pic(t.getValue());
-                return actor;
-            }).collect(Collectors.toList());
-            //2.创建电影对象
-            Movie movie = new Movie();
-            String codeName = other.get("code") != null ? other.get("code") : "";
-            String re = other.get("releaseTime") != null ? other.get("releaseTime") : "";
-            LocalDate releaseTime = re.equals("") ? null : LocalDate.parse(re);
-            String title = other.get("title") != null ? other.get("title") : "";
-            String desc = other.get("desc") != null ? other.get("desc") : other.get("desc");
-            String lenth = other.get("length") != null ? other.get("length") : "";
-            movie.setMovieName(codeName);
-            movie.setReleaseTime(releaseTime);
-            movie.setTitle(title);
-            movie.setDesc(desc);
-            movie.setLength(Integer.parseInt(lenth));
-            movie.setCover(coverData);
-            movie.setActors(actorList);
-            movie.setLocalPath(newName);
-            //使用hibernate,如果存在表关联,则需要在各对象间储存时持有正确的关系
-            //3.创建detail对象
-            var detailList = detailData.entrySet().stream().map(t -> {
-                MovieDetail detail = new MovieDetail(t.getValue(), movie, ReptileUtil.pathToName(t.getKey()));
-                return detail;
-            }).collect(Collectors.toList());
-
-            //最终数据
-            result = new Result(actorList, movie, detailList);
+            result = Assemble(localTargetName, localTargetPath, other, actorData, coverData, detailData);
             return -1;
         }
+    }
+
+    /**
+     * @param localTargetName 表示原目标
+     * @param localTargetPath
+     * @param other           新的基地址为 .../detail/
+     * @param actorData       演员信息
+     * @param coverData       封面信息
+     * @param detailData      详情图
+     * @return
+     */
+    public static Result Assemble(String localTargetName, String localTargetPath, Map<String, String> other, Map<String, byte[]> actorData,
+                                  byte[] coverData, Map<String, byte[]> detailData) {
+        //整理数据
+        String type = localTargetName.substring(localTargetName.lastIndexOf(".") + 1);
+        String newName = localTargetPath + "../" + other.get("code") + "." + type;
+        new File(localTargetName).renameTo(new File(newName));
+        logger.info("处理结束");
+        //todo: 提前终止就不会执行这里
+        //1.创建actor对象
+        var actorList = actorData.entrySet().stream().map(t -> {
+            Actor actor = new Actor();
+            actor.setActor_name(ReptileUtil.pathToName(t.getKey()));
+            actor.setActor_pic(t.getValue());
+            return actor;
+        }).collect(Collectors.toList());
+        //2.创建电影对象
+        Movie movie = new Movie();
+        String codeName = other.get("code") != null ? other.get("code") : "";
+        String re = other.get("releaseTime") != null ? other.get("releaseTime") : "";
+        LocalDate releaseTime = re.equals("") ? null : LocalDate.parse(re);
+        String title = other.get("title") != null ? other.get("title") : "";
+        String desc = other.get("desc") != null ? other.get("desc") : other.get("desc");
+        String lenth = other.get("length") != null ? other.get("length") : "";
+        movie.setMovieName(codeName);
+        movie.setReleaseTime(releaseTime);
+        movie.setTitle(title);
+        movie.setDesc(desc);
+        movie.setLength(Integer.parseInt(lenth));
+        movie.setCover(coverData);
+        movie.setActors(actorList);
+        movie.setLocalPath(newName);
+        //使用hibernate,如果存在表关联,则需要在各对象间储存时持有正确的关系
+        //3.创建detail对象
+        var detailList = detailData.entrySet().stream().map(t -> {
+            MovieDetail detail = new MovieDetail(t.getValue(), movie, ReptileUtil.pathToName(t.getKey()));
+            return detail;
+        }).collect(Collectors.toList());
+
+        //最终数据
+        return new Result(actorList, movie, detailList);
     }
 
     @Step(url = "https://www.arzon.jp/itemlist.html?t=&m=all&s=&q=?", target = "访问搜索页,获取指定电影")
@@ -172,7 +186,7 @@ public class ArzonData {
                     methods.add(new Arzion2(a.replace("//", "/"), reptile.getHost(), reptile.getPro(), now.getHeader(), now.getCookies()));
                 } else {
                     //不存在该电影,写入日志
-                    logger.warn("该影片不存在"+ this.getPath());
+                    logger.warn("该影片不存在" + this.getPath());
                     setEnding(true);
                 }
             } catch (IOException e) {
@@ -270,13 +284,7 @@ public class ArzonData {
                         }
                     } else if (key.equals("収録時間：")) {
                         String time = tds.get(++index).text();
-                        String reg = "[0-9]{1,3}";
-                        Pattern rexp = Pattern.compile(reg);
-                        var match = rexp.matcher(time);
-                        if (match.find()) {
-                            time = match.group();
-                        } else
-                            time = "0";
+                        time = ReptileUtil.getLengthTime(time);
                         other.put("length", time);
                     }
                 }
@@ -303,7 +311,7 @@ public class ArzonData {
                 addNewPath("detail/");
                 ReptileUtil.createDir(localTargetPath);
                 //创建一个演员目录,防止有些没有演员信息的情况导致前边逻辑错误
-                ReptileUtil.createDir(localTargetPath+"../"+ ConstantPath.ACTOR+"/");
+                ReptileUtil.createDir(localTargetPath + "../" + ConstantPath.ACTOR + "/");
             } catch (IOException e) {
                 e.printStackTrace();
             }

@@ -7,7 +7,9 @@ import com.light.privateMovies.reptile.ja.ArzonData;
 import com.light.privateMovies.reptile.ja.ConstantPath;
 import com.light.privateMovies.reptile.core.ReptileUtil;
 import com.light.privateMovies.reptile.ja.JavData;
+import com.light.privateMovies.reptile.ja.Result;
 import com.light.privateMovies.service.ModuleService;
+import com.light.privateMovies.service.MovieService;
 import com.light.privateMovies.service.ReService;
 import com.light.privateMovies.util.fileTargetDeal.AbstractFileDeal;
 import com.light.privateMovies.util.FileUtil;
@@ -30,6 +32,7 @@ public class InitService {
     private String[] target;
     private ModuleService moduleService;
     private ReService reService;
+    private MovieService movieService;
 
     @Autowired
     public void setModuleService(ModuleService moduleService) {
@@ -39,6 +42,11 @@ public class InitService {
     @Autowired
     public void setReService(ReService reService) {
         this.reService = reService;
+    }
+
+    @Autowired
+    public void setMovieService(MovieService movieService) {
+        this.movieService = movieService;
     }
 
     /**
@@ -54,6 +62,9 @@ public class InitService {
         var list = moduleService.getAllModule();
         target = new String[]{"mp4", "mkv", "avi", "wmk", "wmv"};
         scanLocal(list);
+        //执行前台缓冲
+        logger.info("前台缓冲");
+        movieService.moduleMoviesChache();
     }
 
     /**
@@ -85,23 +96,12 @@ public class InitService {
                                 //1.不存在
                                 if (!targetLocal.keySet().contains(code)) {
                                     //获取arzon数据
-//                                    var re = new ArzonData(filePath).getReFromArzon();
-//                                    if (re != null) {
-//                                        //获取jav数据
-//                                        var types = new JavData(code).getType();
-//                                        reService.addTypeList(types);
-//                                        re.getMovie().setCreateTime(LocalDateTime.now());
-//                                        re.getMovie().setMovieTypes(types);
-//                                        reService.saveReptileData(re);
-//                                    } else {
-//                                        logger.warn(code + "发生未知原因提前终止");
-//                                    }
                                     aInitTasks.add(new AInitTask(code, filePath));
                                 }//存在
                                 else {
                                     //查看是否要执行
                                     if (ReptileUtil.ifNeedLocal(ReptileUtil.fileToPath(filePath))) {
-                                        logger.warn(filePath + "已经存在数据,进行本地转移操作");
+                                        logger.error(filePath + "已经存在数据,进行本地转移操作");
                                         Movie movie = reService.getMovieByName(code);
                                         //创建三个目录
                                         Set<String> actors = movie.getActors().stream().map(t -> t.getActor_name()).collect(Collectors.toList()).stream().collect(HashSet::new, HashSet::add, HashSet::addAll);
@@ -140,8 +140,11 @@ public class InitService {
             }, path, target, "");
         });
         //收集task完毕执行线程
-        CountDownLatch latch=new CountDownLatch(aInitTasks.size());
-        aInitTasks.parallelStream().forEach(t->{t.task();latch.countDown();});
+        CountDownLatch latch = new CountDownLatch(aInitTasks.size());
+        aInitTasks.parallelStream().forEach(t -> {
+            t.task();
+            latch.countDown();
+        });
         try {
             latch.await();
         } catch (InterruptedException e) {
@@ -164,14 +167,26 @@ public class InitService {
             var re = new ArzonData(filePath).getReFromArzon();
             if (re != null) {
                 //获取jav数据
-                var types = new JavData(re.getMovie().getMovieName()).getType();
-                reService.addTypeList(types);
-                re.getMovie().setCreateTime(LocalDateTime.now());
-                re.getMovie().setMovieTypes(types);
-                reService.saveReptileData(re);
+                logger.error("在aron处理了" + re.getMovie().getLocalPath());
+                insertData(re);
             } else {
-                logger.warn(code + "发生未知原因提前终止");
+//                logger.error("aron不存在" + code + "此影片不处理");
+                logger.error("aron不存在" + code + "jav处理");
+                //到jav获取数据
+                var result = new JavData(code, filePath).getResult();
+                if (result != null) {
+                    insertData(result);
+                } else
+                    logger.warn(code + "在aron和jav都没有");
             }
+        }
+
+        private void insertData(Result re) {
+            var types = new JavData(re.getMovie().getMovieName()).getType();
+            reService.addTypeList(types);
+            re.getMovie().setCreateTime(LocalDateTime.now());
+            re.getMovie().setMovieTypes(types);
+            reService.saveReptileData(re);
         }
     }
 }

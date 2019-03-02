@@ -153,4 +153,14 @@ public class ReptileUtil {
         return browerParas;
     }
 
+    public static String getLengthTime(String time){
+        String reg = "[0-9]{1,3}";
+        Pattern rexp = Pattern.compile(reg);
+        var match = rexp.matcher(time);
+        if (match.find()) {
+            time = match.group();
+        } else
+            time = "0";
+        return time;
+    }
 }

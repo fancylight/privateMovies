@@ -32,7 +32,7 @@ public abstract class StepMethod {
         this.cookies = cookies;
     }
 
-    public StepMethod(String path, String host, String pro, Map<String, String> header, Map<String, String> cookies) {
+    public  StepMethod(String path, String host, String pro, Map<String, String> header, Map<String, String> cookies) {
         this.path = path;
         this.host = host;
         this.pro = pro;

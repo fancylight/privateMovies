@@ -52,7 +52,7 @@ public class LightBaseDao<T> implements BaseDao<T> {
      *
      * @param key
      * @param value
-     * @return
+     * @return <tt>true</tt>表示存在数据
      */
     public boolean isExist(String key, String value) {
         List l = getList(key, value);

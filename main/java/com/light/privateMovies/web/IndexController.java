@@ -83,7 +83,7 @@ public class IndexController {
      * @param request
      * @return
      */
-    @RequestMapping("/pic/{movieName}/{type}/*.jpg")
+    @RequestMapping("/pic/{movieName}/{type}/*")
     public byte[] getPic(@PathVariable String movieName, @PathVariable String type, HttpServletRequest request) {
         String url = request.getRequestURL().toString();
         String target = url.substring(url.lastIndexOf("/") + 1);

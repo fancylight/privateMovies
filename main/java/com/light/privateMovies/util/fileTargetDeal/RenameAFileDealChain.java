@@ -14,6 +14,7 @@ public class RenameAFileDealChain implements FileDealChain {
         String filePath = ReptileUtil.fileToPath(file.getPath());
         String type = ReptileUtil.getSuffix(file.getName());
         String code = ReptileUtil.getACode(file.getPath());
+        //判断该影片是否为合集
         String newName = filePath + "/" + code + "." + type;
         logger.warn("重命名" + file.getPath() + "--------" + newName);
         file.renameTo(new File(newName));

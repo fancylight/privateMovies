@@ -11,6 +11,7 @@ public class Log4jTest {
     @Test
     public void log4jTest() {
         logger.warn("warn");
+        logger.error("warn");
     }
 
 }
