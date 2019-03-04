@@ -33,7 +33,6 @@ public class ActorDao extends LightBaseDao<Actor> {
     public void setListData(List<Actor> listData) {
         //存在去除
         var li = listData.stream().filter(t -> {
-
                     var re = !isExist("actor_name", t.getActor_name());
                     //将除去的部分添加id
                     if (!re) {

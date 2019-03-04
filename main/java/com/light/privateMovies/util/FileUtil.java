@@ -1,12 +1,17 @@
 package com.light.privateMovies.util;
 
+import com.light.privateMovies.init.InitService;
 import com.light.privateMovies.util.fileTargetDeal.AbstractFileDeal;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public class FileUtil {
+    static Logger logger = LogManager.getLogger(InitService.class);
+
     /**
      * 读取本地数据,基于本地绝对地址或classPath
      *
@@ -44,12 +49,15 @@ public class FileUtil {
     public static void scanDir(AbstractFileDeal fileDealInterface, String path, String targetType[], String parentPath) {
         File file = new File(path);
         if (file.isDirectory()) {
+            //这里操作就是前序
+            fileDealInterface.beforeDir(file, targetType, parentPath);
             var files = file.listFiles();
-            Stream.of(files).forEach(t -> {
-                scanDir(fileDealInterface, t.getPath(), targetType, file.getPath());
-            });
+            Stream.of(files).forEach(t -> scanDir(fileDealInterface, t.getPath(), targetType, file.getPath()));
+            //这里操作就是后续
+            fileDealInterface.afterDir(file, targetType, parentPath);
         } else if (file.isFile()) {
             fileDealInterface.deal(file, targetType, parentPath);
+            //delete 实际上这就两步加起来就是后续便利,有趣的是便利文件夹会产生两种node类型,和二叉树不同
         } else return;
     }
 
@@ -117,6 +125,8 @@ public class FileUtil {
                 out.write(buf, 0, len);
                 buf = new byte[1024];
             }
+
+            //in0.close(); 这里不能这么关闭
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -140,4 +150,25 @@ public class FileUtil {
         }
     }
 
+    public static void deleteDir(String dir, Set<String> modules) {
+        logger.warn(dir + "删除");
+        String[] temp = dir.replaceAll("\\\\", "/").split("/");
+        if (temp.length > 2 && modules.contains(temp[1])) {
+            logger.error("要删除模块????????---------退出");
+            return;
+        }
+        scanDir(new AbstractFileDeal() {
+            @Override
+            public void deal(File file, String[] targetType, String parentPath) {
+                file.delete();
+                logger.info("删除文件" + file.getName());
+            }
+
+            @Override
+            public void afterDir(File file, String[] targetType, String parentPath) {
+                file.delete();
+                logger.info("删除文件夹" + file.getPath());
+            }
+        }, dir, new String[]{}, "");
+    }
 }

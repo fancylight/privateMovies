@@ -19,7 +19,17 @@ public abstract class AbstractFileDeal {
         return fileDealChains;
     }
 
+    //afterFile
     public void deal(File file, String[] targetType, String parentPath) {
+
+    }
+    //beforeDir
+    public void beforeDir(File file, String[] targetType, String parentPath) {
+
+    }
+
+    //afterDir
+    public void afterDir(File file, String[] targetType, String parentPath) {
 
     }
 }

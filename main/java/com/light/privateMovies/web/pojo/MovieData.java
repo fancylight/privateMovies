@@ -1,5 +1,6 @@
 package com.light.privateMovies.web.pojo;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MovieData {
@@ -9,6 +10,7 @@ public class MovieData {
     private List<ActorData> actor;
     private String name;
     private TypeData typeData;
+    private List<String> subs = new ArrayList<>();
 
     public MovieData(String picPath, String filePath, String srt, List<ActorData> actor, String name, TypeData typeData) {
         this.picPath = picPath;
@@ -17,6 +19,14 @@ public class MovieData {
         this.actor = actor;
         this.name = name;
         this.typeData = typeData;
+    }
+
+    public List<String> getSubs() {
+        return subs;
+    }
+
+    public void setSubs(List<String> subs) {
+        this.subs = subs;
     }
 
     public String getPicPath() {

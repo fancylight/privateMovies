@@ -3,12 +3,16 @@ package com.light.privateMovies.dao;
 import com.light.privateMovies.dao.base.LightBaseDao;
 import com.light.privateMovies.pojo.Movie;
 
+import com.light.privateMovies.util.FileUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Repository
@@ -44,5 +48,14 @@ public class MovieDao extends LightBaseDao<Movie> {
     public Map<String, List<Movie>> getNameAndPath() {
         var list = getPartData(new String[]{"movieName", "localPath"});
         return list.stream().collect(Collectors.groupingBy(Movie::getMovieName));
+    }
+    public void delete(Movie movie, Set<String> modules) {
+        super.delete(movie);
+        //删除本地文件
+        try {
+            FileUtil.deleteDir(new File(movie.getLocalPath()).getCanonicalPath() + "/../..",modules);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

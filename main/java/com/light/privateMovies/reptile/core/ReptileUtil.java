@@ -77,7 +77,12 @@ public class ReptileUtil {
      */
     public static String getACode(String name) {
         name = pathToName(name);
-        var match = Pattern.compile("([a-z]|[A-Z]){2,5}-?_?[0-9]{3}").matcher(name);
+        var pattern = Pattern.compile("([a-z]|[A-Z]){2,5}-?_?[0-9]{3}");
+        return getString(name, pattern);
+    }
+
+    private static String getString(String name, Pattern pattern) {
+        var match = pattern.matcher(name);
         if (match.find()) {
             name = match.group();
             name = name.replaceAll("-", "");
@@ -88,6 +93,12 @@ public class ReptileUtil {
         return name;
     }
 
+    public static String getACode2(String name) {
+        name = pathToName(name);
+        var pattern = Pattern.compile("([a-z]|[A-Z]){2,5}-?_?[0-9]{2}");
+        return getString(name, pattern);
+    }
+
     /**
      * @param target 待处理的目标
      * @param regx   要匹配的正则
@@ -96,7 +107,7 @@ public class ReptileUtil {
     public static boolean filterTarget(String target, String[] regx) {
         boolean res = false;
         for (String re : regx) {
-            if (Pattern.compile(re).matcher(target).find()) {
+            if (Pattern.compile(re, Pattern.CASE_INSENSITIVE).matcher(target).find()) {
                 res = true;
                 break;
             }
@@ -139,7 +150,7 @@ public class ReptileUtil {
     }
 
     public static String createActorDir(Set<String> actors) {
-        if(actors.size()==0)
+        if (actors.size() == 0)
             return "null";
         String path = actors.stream().reduce(new StringBuffer(), (t, u) -> t.append("-").append(u), StringBuffer::append).toString();
         return path.substring(path.indexOf("-") + 1);
@@ -153,7 +164,7 @@ public class ReptileUtil {
         return browerParas;
     }
 
-    public static String getLengthTime(String time){
+    public static String getLengthTime(String time) {
         String reg = "[0-9]{1,3}";
         Pattern rexp = Pattern.compile(reg);
         var match = rexp.matcher(time);

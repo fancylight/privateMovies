@@ -17,7 +17,6 @@ import com.light.privateMovies.util.fileTargetDeal.RenameAFileDealChain;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.time.LocalDateTime;
@@ -25,7 +24,6 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
-@Service
 public class InitService {
     Logger logger = LogManager.getLogger(InitService.class);
 
@@ -64,7 +62,7 @@ public class InitService {
         scanLocal(list);
         //执行前台缓冲
         logger.info("前台缓冲");
-        movieService.moduleMoviesChache();
+        movieService.moduleMoviesCache();
     }
 
     /**
@@ -107,7 +105,7 @@ public class InitService {
                                         Set<String> actors = movie.getActors().stream().map(t -> t.getActor_name()).collect(Collectors.toList()).stream().collect(HashSet::new, HashSet::add, HashSet::addAll);
                                         String actorPath = ReptileUtil.createActorDir(actors);
                                         String moviePath = ReptileUtil.createTitleCodeDir(movie.getMovieName(), movie.getTitle());
-                                        String p = parentPath + "/" + actorPath + "/" + moviePath;
+                                        String p = ReptileUtil.dealDouble(parentPath) + "/" + actorPath + "/" + moviePath;
                                         String aP = p + "/" + ConstantPath.ACTOR;
                                         String dP = p + "/" + ConstantPath.DETAIL;
                                         String cP = p + "/" + ConstantPath.COVER;

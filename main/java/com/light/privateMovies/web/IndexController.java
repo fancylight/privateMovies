@@ -1,10 +1,15 @@
 package com.light.privateMovies.web;
 
+import com.light.privateMovies.dao.MovieTypeDao;
+import com.light.privateMovies.init.SubDeal;
 import com.light.privateMovies.pojo.ModuleEntry;
 import com.light.privateMovies.pojo.Movie;
+import com.light.privateMovies.pojo.MovieType;
+import com.light.privateMovies.reptile.core.ReptileUtil;
 import com.light.privateMovies.reptile.ja.ConstantPath;
 import com.light.privateMovies.service.ModuleService;
 import com.light.privateMovies.service.MovieService;
+import com.light.privateMovies.service.MovieTypeService;
 import com.light.privateMovies.util.FileUtil;
 import com.light.privateMovies.web.pojo.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +28,7 @@ import java.util.stream.Collectors;
 public class IndexController {
     private ModuleService moduleService;
     private MovieService movieService;
+    private MovieTypeService movieType;
 
     @Autowired
     public void setModuleService(ModuleService moduleService) {
@@ -34,6 +40,10 @@ public class IndexController {
         this.movieService = movieService;
     }
 
+    @Autowired
+    public void setMovieType(MovieTypeService movieType) {
+        this.movieType = movieType;
+    }
 
     /**
      * //TODO:看看jackson源码如何转换json的
@@ -61,7 +71,7 @@ public class IndexController {
         });
         //转换
         var l = list.stream().map(t -> {
-            var ml = movieService.getMoviesByMoudle(t.getModuleName());
+            var ml = movieService.getMoviesByModule(t.getModuleName());
             Movie movie = null;
             if (ml.size() != 0)
                 movie = ml.get(0);
@@ -73,6 +83,35 @@ public class IndexController {
 
     private String getPicPath(Movie movie, String type, String targetName) {
         return "/pic/" + movie.getMovieName() + "/" + type + "/" + targetName + ".jpg";
+    }
+
+    @RequestMapping("/sub/**")
+    public String getSub(HttpServletRequest request, HttpServletResponse response) {
+        String url = null;
+        try {
+            //todo:解码应该做成springMVC的拦截器
+            url = URLDecoder.decode(request.getRequestURL().toString(), "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        String path = SubDeal.DISK + url.substring(url.indexOf("sub") + +3);
+        if (!new File(path).exists()) {
+            path = path.substring(0, path.lastIndexOf(".") + 1) + "srt";
+        }
+        try (var in = new FileInputStream(path)) {
+            var buf = FileUtil.getInBytes(in);
+            System.out.println(new String(buf,"utf-8"));
+            response.setCharacterEncoding("utf-8");
+            response.setHeader("Content-type","text/plain;charset=UTF-8");
+            response.getOutputStream().write(buf);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return "文件不存在:";
+        } catch (IOException e) {
+            e.printStackTrace();
+            return e.getMessage();
+        }
+        return "";
     }
 
     /**
@@ -94,19 +133,26 @@ public class IndexController {
         }
         //根据电影名称找到实际路径
         String real = movieService.getRealPathByName(movieName);
-        byte[] bytes = null;
-        if (real.equals(""))
-            return bytes;
-        else {
-            real = real.substring(0, real.lastIndexOf("/"));
-            String path = real + "/" + type + "/" + target;
-            try {
-                bytes = FileUtil.getInBytes(new FileInputStream(new File(path)));
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
+        if (real != null) {
+            byte[] bytes = null;
+            if (real.equals(""))
+                return bytes;
+            else {
+                real = real.substring(0, real.lastIndexOf("/"));
+                String path = real + "/" + type + "/" + target;
+                try {
+                    var in = new FileInputStream(new File(path));
+                    bytes = FileUtil.getInBytes(in);
+                    in.close();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return bytes;
             }
-            return bytes;
         }
+        return null;
     }
 
     private int maxBytes = 64 * 1024;
@@ -131,13 +177,14 @@ public class IndexController {
         } else {
             dataRange[1] = length - 1;
         }
-
-        byte[] buf = new byte[maxBytes];
+        //todo:此处的maxBytes应该值得调节一下,默认我设置的是64KB
+        byte[] buf = new byte[maxBytes * 3];
         //2.根据距离进行读
         try {
             var ra = new RandomAccessFile(new File(real), "r");
             ra.seek(dataRange[0]);
             int readLen = ra.read(buf); //返回读取的字节数
+            ra.close();
             var out = response.getOutputStream();
             response.setHeader("Content-Length", "" + readLen);
             response.setHeader("Content-Type", "video/" + type);
@@ -165,7 +212,7 @@ public class IndexController {
      */
     @RequestMapping("/getMovies")
     public List<MoviesData> getMoviesByModuleName(@RequestParam(name = "moduleName") String moduleName) {
-        var list = movieService.getMoviesByMoudle(moduleName);
+        var list = movieService.getMoviesByModule(moduleName);
         return list.stream().map(t -> {
             MoviesData data = new MoviesData(getPicPath(t, ConstantPath.COVER, t.getMovieName()), t.getMovieName(), getMoviePath(t), t.getCreateTime().toEpochSecond(ZoneOffset.UTC));
             return data;
@@ -179,11 +226,6 @@ public class IndexController {
     @RequestMapping("/getMovie")
     public MovieData getMovieByName(@RequestParam(name = "movieName") String movieName) {
         Movie m = movieService.getMovieByName(movieName);
-//        var actors = m.getActors().stream().map(t -> {
-//            ActorData actorData = new ActorData(getPicPath(m, ConstantPath.ACTOR, t.getActor_name()), t.getActor_name());
-//            return actorData;
-//        }).collect(Collectors.toList());
-//        MovieData movieData = new MovieData(getPicPath(m, ConstantPath.COVER, m.getMovieName()), getMoviePath(m), getSrtPath(m), actors, m.getMovieName());
         return getMovieDataByMovie(m);
     }
 
@@ -235,6 +277,13 @@ public class IndexController {
         return re;
     }
 
+    //todo:这里也有分支,要么将缓冲中的数据当作系统未关闭前的所有请求,当系统关闭|制定时间将缓冲跟新到数据库中
+    @RequestMapping("/deleteMovie/{movieName}")
+    public String deleteMovie(@PathVariable String movieName) {
+        movieName = ReptileUtil.pathToName(movieName);
+        return movieService.deleteMovie(movieName);
+    }
+
     /**
      * 创建movieData数据
      *
@@ -243,6 +292,19 @@ public class IndexController {
      */
     private MovieData getMovieDataByMovie(Movie movie) {
         var m = new MovieData(getPicPath(movie, ConstantPath.COVER, movie.getMovieName()), getMoviePath(movie), getSrtPath(movie), getActorDataByMovie(movie), movie.getMovieName(), getTypeDataBy(movie));
+        m.setSubs(movieService.getSubs(m.getName()));
+        if (m.getSubs() != null && m.getSubs().size() > 0) {
+            if (!m.getTypeData().getTypes().contains("中文")) //判断构造数据中有无中文
+                m.getTypeData().getTypes().add("中文");
+            if (!movie.getMovieTypes().stream().anyMatch((t) -> t.getMovieType().equals("中文"))) { //判断movie中是否有中文,没有添加
+                var type = new MovieType("中文");
+                type = movieType.addNoExist(type);
+                movie.getMovieTypes().add(type);
+                movieService.updata(movie);
+            }
+
+        }
+
         return m;
     }
 

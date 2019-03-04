@@ -64,8 +64,9 @@ public class LightBaseDao<T> implements BaseDao<T> {
         String sql = "select * from " + tableName + " where " + key + " = '" + value + "'";
         return hibernateTemplate.execute(session -> session.createSQLQuery(sql).list());
     }
+
     //通过某字段返回list
-    public List<T> getListByKeyValue(String key, String value) {
+    public List<Object[]> getListByKeyValue(String key, String value) {
         List l = getList(key, value);
         return l;
     }
