@@ -43,10 +43,10 @@ public class SubDeal {
                         code = ReptileUtil.getACode2(file.getPath());
                     if (subMap.containsKey(code)) {
                         subMap.get(code).add(file.getPath());
-                        SubToVtt(file);
+//                        SubToVtt(file);
                     } else {
                         subMap.put(code, new ArrayList<>());
-                        SubToVtt(file);
+//                        SubToVtt(file);
                     }
                 }
             }
@@ -83,7 +83,6 @@ public class SubDeal {
             pp.add(ASCIIDetector.getInstance());
             String name="utf-8";
             try {
-                System.out.println(file.getPath());
                 name=pp.detectCodepage(file.toURL()).name();
             } catch (IOException e) {
                 e.printStackTrace();

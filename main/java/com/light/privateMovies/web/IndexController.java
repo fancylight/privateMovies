@@ -1,6 +1,5 @@
 package com.light.privateMovies.web;
 
-import com.light.privateMovies.dao.MovieTypeDao;
 import com.light.privateMovies.init.SubDeal;
 import com.light.privateMovies.pojo.ModuleEntry;
 import com.light.privateMovies.pojo.Movie;
@@ -100,9 +99,9 @@ public class IndexController {
         }
         try (var in = new FileInputStream(path)) {
             var buf = FileUtil.getInBytes(in);
-            System.out.println(new String(buf,"utf-8"));
+            System.out.println(new String(buf, "utf-8"));
             response.setCharacterEncoding("utf-8");
-            response.setHeader("Content-type","text/plain;charset=UTF-8");
+            response.setHeader("Content-type", "text/plain;charset=UTF-8");
             response.getOutputStream().write(buf);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -159,14 +158,17 @@ public class IndexController {
 
     //H5 VIDEO请求 为 Content-Range: bytes=79036416-
     @RequestMapping("/movie/{movieName}/{target}")
-    public byte[] playMovieOnH5(@PathVariable(name = "movieName") String movieName, HttpServletResponse response, @RequestHeader(name = "range") String range, HttpServletRequest request) {
-        String real = movieService.getRealPathByName(movieName);
-        if (real.equals(""))
-            return null;
-        long length = new File(real).length();
+    public byte[] playMovieOnH5(HttpServletResponse response, @RequestHeader(name = "range") String range, HttpServletRequest request) {
         String url = request.getRequestURL().toString();
         String target = url.substring(url.lastIndexOf("/") + 1);
         String type = target.substring(target.lastIndexOf(".") + 1);
+        String real = movieService.getRealPathByName(target.substring(0, target.indexOf(".")));
+        if (real.equals(""))
+            return null;
+        if (target.contains("part"))
+            real += "." + type;
+        long length = new File(real).length();
+
         //1.处理start-end
         range = range.replace("bytes=", "");
         long[] dataRange = new long[2];
@@ -258,9 +260,15 @@ public class IndexController {
             movies = movieService.getAllMovies().stream().filter(t -> t.getActors().stream().anyMatch(t2 -> t2.getActor_name().equals(data))).collect(Collectors.toList());
         else if (type.equals("type"))
             movies = movieService.getAllMovies().stream().filter(t -> t.getMovieTypes().stream().anyMatch(t2 -> t2.getMovieType().contains(data))).collect(Collectors.toList());
+        else if (type.equals("all"))
+            movies = movieService.getMoviesByKeyWord(data);
         return movies.stream().map(m -> getMovieDataByMovie(m)).collect(Collectors.toList());
     }
 
+    /**
+     * @param movieName 电影名
+     * @return 通过电影名打开本地文件夹
+     */
     @RequestMapping("/openDir/movie/{movieName}")
     public String openDir(@PathVariable(name = "movieName") String movieName) {
         String real = movieService.getRealPathByName(movieName);
@@ -292,6 +300,7 @@ public class IndexController {
      */
     private MovieData getMovieDataByMovie(Movie movie) {
         var m = new MovieData(getPicPath(movie, ConstantPath.COVER, movie.getMovieName()), getMoviePath(movie), getSrtPath(movie), getActorDataByMovie(movie), movie.getMovieName(), getTypeDataBy(movie));
+        //添加字幕信息
         m.setSubs(movieService.getSubs(m.getName()));
         if (m.getSubs() != null && m.getSubs().size() > 0) {
             if (!m.getTypeData().getTypes().contains("中文")) //判断构造数据中有无中文
@@ -300,11 +309,12 @@ public class IndexController {
                 var type = new MovieType("中文");
                 type = movieType.addNoExist(type);
                 movie.getMovieTypes().add(type);
-                movieService.updata(movie);
+                movieService.update(movie);
             }
 
         }
-
+        //添加分p信息
+        m.setParts(movieService.getPartList(movie.getMovieName()));
         return m;
     }
 

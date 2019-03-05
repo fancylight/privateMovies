@@ -18,6 +18,20 @@ import java.util.stream.Collectors;
 public class MovieService {
     private MovieDao movieDao;
     private ModuleDao moduleDao;
+    private boolean hasBuf = false;
+    //缓冲模块对应本地实际包含的电影
+    private HashMap<String, List<Movie>> moduleMovies = new HashMap<>();
+    private SubDeal subDeal;
+    //分p信息
+    private HashMap<String, List<String>> partMovies = new HashMap<>();
+
+    public HashMap<String, List<String>> getPartMovies() {
+        return partMovies;
+    }
+
+    public void setPartMovies(HashMap<String, List<String>> partMovies) {
+        this.partMovies = partMovies;
+    }
 
     @Autowired
     public void setMovieDao(MovieDao movieDao) {
@@ -30,12 +44,6 @@ public class MovieService {
     }
 
     private Map<String, List<Movie>> movieHashMap = new HashMap<>();
-
-    private boolean hasBuf = false;
-    //缓冲模块对应本地实际包含的电影
-    private HashMap<String, List<Movie>> moduleMovies = new HashMap<>();
-
-    private SubDeal subDeal;
 
     @Autowired
     public void setSubDeal(SubDeal subDeal) {
@@ -88,17 +96,31 @@ public class MovieService {
 
     /**
      * 获取电影实际位置
+     * //电影名称要么是 xxx 要么是xxxparty
      *
      * @param name
      * @return 如果为null说明电影不存在
      */
     public String getRealPathByName(String name) {
+        boolean isPart = false;
+        var para = name;
+        if (name.contains("part")) {
+            name = name.substring(0, name.indexOf("part"));
+            isPart = true;
+        }
         Movie m = null;
         if (hasBuf) {
             m = movieHashMap.containsKey(name) ? movieHashMap.get(name).get(0) : null;
         } else
-            movieDao.getMovieByMovieName(name);
-        return m != null ? m.getLocalPath() : "";
+            m = movieDao.getMovieByMovieName(name);
+        if (m != null) {
+            if (!isPart)
+                return m.getLocalPath();
+            else {
+                return m.getLocalPath()+"/../"+para;
+            }
+        } else
+            return "";
     }
 
     /**
@@ -132,6 +154,12 @@ public class MovieService {
         return movieHashMap.values().stream().flatMap(t -> t.stream()).collect(Collectors.toList());
     }
 
+    /**
+     * 删除电影
+     *
+     * @param movieName
+     * @return
+     */
     public String deleteMovie(String movieName) {
         var m = movieHashMap.get(movieName).get(0);
         var module = getModuleName(m);
@@ -145,14 +173,36 @@ public class MovieService {
         return movieName;
     }
 
+    /**
+     * //todo:这里的处理都是我没有在movie中添加module id字段造成的
+     * 获取模块名称
+     *
+     * @param movie
+     * @return
+     */
     private String getModuleName(Movie movie) {
         if (movie != null)
             return movie.getLocalPath().split("/")[1];
         return "";
     }
 
-    public void updata(Movie movie) {
+    public void update(Movie movie) {
         movieDao.update(movie);
     }
 
+    /**
+     * 遍历所有电影,删选符合信息的电影
+     *
+     * @param keyWord
+     * @return
+     */
+    public List<Movie> getMoviesByKeyWord(String keyWord) {
+        return getAllMovies().stream().filter(movie -> movie.getMovieName().contains(keyWord)
+                || movie.getMovieTypes().stream().anyMatch(type -> type.getMovieType().contains(keyWord))
+                || movie.getActors().stream().anyMatch(actor -> actor.getActor_name().contains(keyWord))).collect(Collectors.toList());
+    }
+
+    public List<String> getPartList(String movieName) {
+        return this.partMovies.get(movieName);
+    }
 }
