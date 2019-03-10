@@ -11,6 +11,8 @@ import com.light.privateMovies.service.MovieService;
 import com.light.privateMovies.service.MovieTypeService;
 import com.light.privateMovies.util.FileUtil;
 import com.light.privateMovies.web.pojo.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,6 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +31,7 @@ public class IndexController {
     private ModuleService moduleService;
     private MovieService movieService;
     private MovieTypeService movieType;
+    private Logger logger = LogManager.getLogger(IndexController.class);
 
     @Autowired
     public void setModuleService(ModuleService moduleService) {
@@ -99,7 +103,6 @@ public class IndexController {
         }
         try (var in = new FileInputStream(path)) {
             var buf = FileUtil.getInBytes(in);
-            System.out.println(new String(buf, "utf-8"));
             response.setCharacterEncoding("utf-8");
             response.setHeader("Content-type", "text/plain;charset=UTF-8");
             response.getOutputStream().write(buf);
@@ -132,25 +135,31 @@ public class IndexController {
         }
         //根据电影名称找到实际路径
         String real = movieService.getRealPathByName(movieName);
-        if (real != null) {
-            byte[] bytes = null;
-            if (real.equals(""))
-                return bytes;
-            else {
-                real = real.substring(0, real.lastIndexOf("/"));
-                String path = real + "/" + type + "/" + target;
-                try {
-                    var in = new FileInputStream(new File(path));
-                    bytes = FileUtil.getInBytes(in);
-                    in.close();
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
+        if (new File(real).exists()) {
+            if (real != null) {
+                byte[] bytes = null;
+                if (real.equals(""))
+                    return bytes;
+                else {
+                    real = real.substring(0, real.lastIndexOf("/"));
+                    String path = real + "/" + type + "/" + target;
+                    if (new File(path).exists()) {
+                        try {
+                            var in = new FileInputStream(new File(path));
+                            bytes = FileUtil.getInBytes(in);
+                            in.close();
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        return bytes;
+                    }
+
                 }
-                return bytes;
             }
-        }
+        } else
+            logger.info("不存在" + real);
         return null;
     }
 
@@ -160,6 +169,11 @@ public class IndexController {
     @RequestMapping("/movie/{movieName}/{target}")
     public byte[] playMovieOnH5(HttpServletResponse response, @RequestHeader(name = "range") String range, HttpServletRequest request) {
         String url = request.getRequestURL().toString();
+        try {
+            url= URLDecoder.decode(url,"utf-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
         String target = url.substring(url.lastIndexOf("/") + 1);
         String type = target.substring(target.lastIndexOf(".") + 1);
         String real = movieService.getRealPathByName(target.substring(0, target.indexOf(".")));
@@ -231,6 +245,12 @@ public class IndexController {
         return getMovieDataByMovie(m);
     }
 
+    /**
+     * 打开本地播放器
+     *
+     * @param movieName
+     * @return
+     */
     @RequestMapping("/showMovies")
     public String playMovie(@RequestParam(name = "movieName") String movieName) {
         String name = movieName.substring(movieName.lastIndexOf("/") + 1);

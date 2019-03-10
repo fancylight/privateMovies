@@ -5,6 +5,7 @@ import com.light.privateMovies.dao.MovieDao;
 import com.light.privateMovies.init.SubDeal;
 import com.light.privateMovies.pojo.Movie;
 import com.light.privateMovies.reptile.core.ReptileUtil;
+import com.light.privateMovies.util.FileUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
@@ -24,10 +26,13 @@ public class MovieService {
     private SubDeal subDeal;
     //分p信息
     private HashMap<String, List<String>> partMovies = new HashMap<>();
+    //电影名-电影
+    private Map<String, List<Movie>> movieHashMap = new HashMap<>();
 
     public HashMap<String, List<String>> getPartMovies() {
         return partMovies;
     }
+
 
     public void setPartMovies(HashMap<String, List<String>> partMovies) {
         this.partMovies = partMovies;
@@ -43,11 +48,14 @@ public class MovieService {
         this.moduleDao = moduleDao;
     }
 
-    private Map<String, List<Movie>> movieHashMap = new HashMap<>();
 
     @Autowired
     public void setSubDeal(SubDeal subDeal) {
         this.subDeal = subDeal;
+    }
+
+    public Map<String, List<Movie>> getMovieHashMap() {
+        return movieHashMap;
     }
 
     //返回字幕位置,但是不包括盘符,否则400
@@ -63,19 +71,30 @@ public class MovieService {
         }).map(t -> t.substring(0, t.lastIndexOf(".") + 1) + "vtt").collect(Collectors.toList());
     }
 
+    public void addMovieToCache(Movie movie) {
+        if (movieHashMap != null) {
+            movieHashMap.put(movie.getMovieName(), Stream.of(movie).collect(Collectors.toList()));
+        }
+
+    }
+
     /**
      * 该函数表示缓冲,被initService调用
      */
     public void moduleMoviesCache() {
-        movieHashMap = movieDao.getAll().stream().collect(Collectors.groupingBy(Movie::getMovieName));
-        hasBuf = true;
+        //todo:由于我打算将无码部分的不放进数据库中,因此,在取完数据中真正存在的信息后,
+        //手动添加无码部分,因此将获取movies和拼接模块-movies分离了
+//        movieHashMap = movieDao.getAll().stream().collect(Collectors.groupingBy(Movie::getMovieName));
+//        hasBuf = true;
         var modules = moduleDao.getAll();
         modules.stream().forEach(m -> {
             ArrayList<Movie> list = new ArrayList<>();
-            var movies = getMoviesByModuleAll(m.getModuleName());
+            //获取指定模块路径中的数据
+            var movies = getMoviesByModuleAll(FileUtil.getPathPart(m.getLocalPath(), 1));
             moduleMovies.put(m.getModuleName(), list);
+            //判断该电影是任然存在
             var target = movies.stream().filter(movie -> {
-                if (movie.getLocalPath().contains(m.getModuleName()) && new File(movie.getLocalPath()).exists()) {
+                if (new File(movie.getLocalPath()).exists()) {
                     return true;
                 }
                 return false;
@@ -117,7 +136,7 @@ public class MovieService {
             if (!isPart)
                 return m.getLocalPath();
             else {
-                return m.getLocalPath()+"/../"+para;
+                return m.getLocalPath() + "/../" + para;
             }
         } else
             return "";

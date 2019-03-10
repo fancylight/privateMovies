@@ -1,13 +1,16 @@
 package com.light.privateMovies.pojo;
 
 
+import com.light.privateMovies.reptile.core.ReptileUtil;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
 import javax.persistence.*;
+import java.io.File;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -161,4 +164,21 @@ public class Movie {
     public void setLocalPath(String localPath) {
         this.localPath = localPath;
     }
+
+    /**
+     * 创建的不从爬虫拿取数据的情况
+     * @param file
+     */
+    public static Movie  CreateNMovie(File file) {
+        Movie movie = new Movie();
+        movie.setMovieName(ReptileUtil.pathToName(file.getName()));
+        movie.setLocalPath(ReptileUtil.dealDouble(file.getPath()));
+        movie.setCreateTime(LocalDateTime.now());
+        movie.setActors(new ArrayList<>());
+        movie.setDesc("");
+        movie.setTitle("");
+        movie.setMovieTypes(new ArrayList<>());
+        return movie;
+    }
+
 }

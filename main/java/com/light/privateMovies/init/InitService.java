@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -33,6 +34,7 @@ public class InitService {
     private ReService reService;
     private MovieService movieService;
     private HashMap<String, String> partMovies;//分p部分
+    private List<Movie> unMovies;//无数据部分
 
     @Autowired
     public void setModuleService(ModuleService moduleService) {
@@ -62,6 +64,9 @@ public class InitService {
         var list = moduleService.getAllModule();
         target = new String[]{"mp4", "mkv", "avi", "wmk", "wmv"};
         scanLocal(list);
+        movieService.getAllMovies();
+        //添加无码部分
+        unMovies.stream().forEach(movie -> movieService.addMovieToCache(movie));
         //执行前台缓冲
         logger.info("前台缓冲");
         movieService.moduleMoviesCache();
@@ -85,7 +90,10 @@ public class InitService {
                 movieService.getAllMovies().stream().anyMatch(movie -> {
                     if (movie.getMovieName().equals(finalName)) {
                         //移动
-                        new File(partMovies.get(partMovie)).renameTo(new File(movie.getLocalPath() + "/../" + partMovie));
+                        String src = partMovies.get(partMovie);
+                        String dest = movie.getLocalPath() + "/../" + partMovie;
+                        new File(src).renameTo(new File(dest));
+                        logger.warn("存在分p移动:" + src + "-------->" + dest);
                         var list = movieService.getPartMovies().get(movie.getMovieName());
                         if (list == null) {
                             List<String> l = new ArrayList<>();
@@ -185,30 +193,7 @@ public class InitService {
                 else {
                     //查看是否要执行
                     if (ReptileUtil.ifNeedLocal(ReptileUtil.fileToPath(filePath))) {
-                        logger.error(filePath + "已经存在数据,进行本地转移操作");
-                        Movie movie = reService.getMovieByName(code);
-                        //创建三个目录
-                        Set<String> actors = movie.getActors().stream().map(t -> t.getActor_name()).collect(Collectors.toList()).stream().collect(HashSet::new, HashSet::add, HashSet::addAll);
-                        String actorPath = ReptileUtil.createActorDir(actors);
-                        String moviePath = ReptileUtil.createTitleCodeDir(movie.getMovieName(), movie.getTitle());
-                        String p = ReptileUtil.dealDouble(parentPath) + "/" + actorPath + "/" + moviePath;
-                        String aP = p + "/" + ConstantPath.ACTOR;
-                        String dP = p + "/" + ConstantPath.DETAIL;
-                        String cP = p + "/" + ConstantPath.COVER;
-                        ReptileUtil.createDir(aP);
-                        ReptileUtil.createDir(dP);
-                        ReptileUtil.createDir(cP);
-                        //复制detail
-                        movie.getMovieDetails().stream().forEach(f -> FileUtil.wirteToDest(f.getDetailPic(), dP + "/" + f.getName() + ".jpg"));
-                        //复制cover
-                        FileUtil.wirteToDest(movie.getCover(), cP + "/" + movie.getMovieName() + ".jpg");
-                        //复制actor
-                        movie.getActors().stream().forEach(a -> FileUtil.wirteToDest(a.getActor_pic(), aP + "/" + a.getActor_name() + ".jpg"));
-                        String newName = dP + "/../" + file.getName();
-                        //移动
-                        file.renameTo(new File(newName));
-                        movie.setLocalPath(newName);
-                        reService.updateMoviePath(movie);
+                        dealIfExist(file, parentPath, filePath, code);
                     }//todo:收集完数据应该对数据库中movie做一次检测,如果对应localPath不存在数据,则标记为本地移除,这要给movie加一个字段
                     else {
                     }
@@ -217,12 +202,57 @@ public class InitService {
                 logger.warn(filePath + "不是一个番号");
             }
         } else if (type.equals("movie")) {
-
+            //假设从豆瓣拿取数据
+        } else if (type.equals("无码") || type.equals("动画")) {
+            //不做处理加入到movie中
+            if (unMovies != null) {
+                unMovies.add(Movie.CreateNMovie(file));
+            } else
+                unMovies = new ArrayList<>();
         }
+    }
+
+
+    /**
+     * 处理当目标已经存在于数据库中
+     *
+     * @param file
+     * @param parentPath
+     * @param filePath
+     * @param code
+     */
+    private void dealIfExist(File file, String parentPath, String filePath, String code) {
+        logger.error(filePath + "已经存在数据,进行本地转移操作");
+        Movie movie = reService.getMovieByName(code);
+        //创建三个目录
+        Set<String> actors = movie.getActors().stream().map(t -> t.getActor_name()).collect(Collectors.toList()).stream().collect(HashSet::new, HashSet::add, HashSet::addAll);
+        String actorPath = ReptileUtil.createActorDir(actors);
+        String moviePath = ReptileUtil.createTitleCodeDir(movie.getMovieName(), movie.getTitle());
+        String p = ReptileUtil.dealDouble(parentPath) + "/" + actorPath + "/" + moviePath;
+        String aP = p + "/" + ConstantPath.ACTOR;
+        String dP = p + "/" + ConstantPath.DETAIL;
+        String cP = p + "/" + ConstantPath.COVER;
+        ReptileUtil.createDir(aP);
+        ReptileUtil.createDir(dP);
+        ReptileUtil.createDir(cP);
+        //复制detail
+        movie.getMovieDetails().stream().forEach(f -> FileUtil.wirteToDest(f.getDetailPic(), dP + "/" + f.getName() + ".jpg"));
+        //复制cover
+        FileUtil.wirteToDest(movie.getCover(), cP + "/" + movie.getMovieName() + ".jpg");
+        //复制actor
+        movie.getActors().stream().forEach(a -> FileUtil.wirteToDest(a.getActor_pic(), aP + "/" + a.getActor_name() + ".jpg"));
+        String newName = dP + "/../" + file.getName();
+        //移动
+        file.renameTo(new File(newName));
+        movie.setLocalPath(newName);
+        reService.updateMoviePath(movie);
     }
 
     private List<AInitTask> aInitTasks = new ArrayList<>();
 
+    /**
+     * 爬取数据的任务队列
+     */
     class AInitTask {
         private String code;
         private String filePath;
@@ -233,6 +263,7 @@ public class InitService {
         }
 
         public void task() {
+            //todo:该网站还有一些bug,不如说搜索jbs-008 他会有两个结果第一个为NJBS-008,第二个为jbs-008
             var re = new ArzonData(filePath).getReFromArzon();
             if (re != null) {
                 //获取jav数据

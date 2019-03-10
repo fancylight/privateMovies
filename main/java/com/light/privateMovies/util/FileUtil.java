@@ -153,7 +153,7 @@ public class FileUtil {
     public static void deleteDir(String dir, Set<String> modules) {
         logger.warn(dir + "删除");
         String[] temp = dir.replaceAll("\\\\", "/").split("/");
-        if (temp.length > 2 && modules.contains(temp[1])) {
+        if (temp.length == 2 && modules.contains(temp[1])) {
             logger.error("要删除模块????????---------退出");
             return;
         }
@@ -170,5 +170,15 @@ public class FileUtil {
                 logger.info("删除文件夹" + file.getPath());
             }
         }, dir, new String[]{}, "");
+    }
+
+    /**
+     * 获取路径的第x部分,0表示最左边的部分
+     * @param localPath
+     * @param i
+     * @return
+     */
+    public static String getPathPart(String localPath, int i) {
+        return localPath.replaceAll("\\\\","/").split("/")[i];
     }
 }

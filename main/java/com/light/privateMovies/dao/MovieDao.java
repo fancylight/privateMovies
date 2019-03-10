@@ -53,7 +53,7 @@ public class MovieDao extends LightBaseDao<Movie> {
         super.delete(movie);
         //删除本地文件
         try {
-            FileUtil.deleteDir(new File(movie.getLocalPath()).getCanonicalPath() + "/../..",modules);
+            FileUtil.deleteDir(new File(movie.getLocalPath()).getCanonicalPath() + "/..",modules);
         } catch (IOException e) {
             e.printStackTrace();
         }

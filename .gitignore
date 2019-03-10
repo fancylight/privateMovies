@@ -11,4 +11,11 @@ gen
 /test/java/
 
 /main/webapp/
-/main/webapp/javascripts/
+
+/main/webapp/stylesheets/bootstrap-treeview.css
+/main/webapp/stylesheets/bootstrap-grid.css
+/main/webapp/stylesheets/bootstrap-reboot.css
+/main/webapp/stylesheets/bootstrap-theme.css
+/main/webapp/stylesheets/bootstrap.css
+/main/webapp/stylesheets/css/
+/main/webapp/stylesheets/fonts/
