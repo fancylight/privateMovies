@@ -78,7 +78,11 @@ public class IndexController {
             Movie movie = null;
             if (ml.size() != 0)
                 movie = ml.get(0);
-            var md = new ModuleData(getPicPath(movie, ConstantPath.COVER, movie.getMovieName()), t.getModuleName(), t.getModuleName());
+            ModuleData md=null;
+            if (movie!=null)
+             md= new ModuleData(getPicPath(movie, ConstantPath.COVER, movie.getMovieName()), t.getModuleName(), t.getModuleName());
+            else
+                md=new ModuleData("",t.getModuleName(),t.getModuleName());
             return md;
         }).collect(Collectors.toList());
         return l;

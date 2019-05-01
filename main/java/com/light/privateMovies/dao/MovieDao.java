@@ -27,7 +27,6 @@ public class MovieDao extends LightBaseDao<Movie> {
     }
 
     /**
-     *
      * @param name 电影名
      * @return 电影
      */
@@ -42,18 +41,24 @@ public class MovieDao extends LightBaseDao<Movie> {
     }
 
     /**
-     *  仅仅获取电影名和path
+     * 仅仅获取电影名和path
+     *
      * @return
      */
     public Map<String, List<Movie>> getNameAndPath() {
         var list = getPartData(new String[]{"movieName", "localPath"});
         return list.stream().collect(Collectors.groupingBy(Movie::getMovieName));
     }
-    public void delete(Movie movie, Set<String> modules) {
+
+    //todo:删除操作要分情况,典型的文件夹应该是   模块/演员/作品名/作品,要排除不是这种情况
+    //解决方法1:将暴露在模块下的电影创建一个同名文件夹
+    public void delete(Movie movie, String modulePath) {
         super.delete(movie);
         //删除本地文件
         try {
-            FileUtil.deleteDir(new File(movie.getLocalPath()).getCanonicalPath() + "/..",modules);
+            String targetPath=new File(movie.getLocalPath()).getCanonicalPath();
+            String dirPath=new File(targetPath+"/..").getCanonicalPath();
+            FileUtil.deleteDir(dirPath, targetPath, modulePath);
         } catch (IOException e) {
             e.printStackTrace();
         }

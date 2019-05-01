@@ -30,4 +30,5 @@ public class ModuleDao extends LightBaseDao<ModuleEntry> {
         m.setModuleName(name);
         return getListByExample(m);
     }
+
 }

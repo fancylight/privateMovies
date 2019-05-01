@@ -61,20 +61,27 @@ public class InitService {
     void scanInitByModule() {
         //获取到模块指定的所有目标
         logger.info("初始化");
+        long t0 = System.currentTimeMillis();
         var list = moduleService.getAllModule();
         target = new String[]{"mp4", "mkv", "avi", "wmk", "wmv"};
+        //先执行一次缓冲
+        logger.info("初始部分缓冲");
+        movieService.getAllMovies();
         scanLocal(list);
+        logger.info("前台缓冲");
+        //重新缓冲
+        movieService.setHasBuf(false);
         movieService.getAllMovies();
         //添加无码部分
         unMovies.stream().forEach(movie -> movieService.addMovieToCache(movie));
         //执行前台缓冲
-        logger.info("前台缓冲");
         movieService.moduleMoviesCache();
         //处理分p部分
         partListDeal();
         //手动释放
         target = null;
         partMovies = null;
+        logger.info("初始化时间:" + (System.currentTimeMillis() - t0) + "ms");
     }
 
     private void partListDeal() {
@@ -196,6 +203,22 @@ public class InitService {
                         dealIfExist(file, parentPath, filePath, code);
                     }//todo:收集完数据应该对数据库中movie做一次检测,如果对应localPath不存在数据,则标记为本地移除,这要给movie加一个字段
                     else {
+                        //存在数据并且不需要重新创建本地,判断是否本地文件如进行过转码操作, .mkw->mp4,会造成localPath改变
+                        var movie = movieService.getMovieByName(code);
+                        try {
+                            String abPath = new File(movie.getLocalPath()).getCanonicalPath();
+                            String path = file.getCanonicalPath();
+                            if (!abPath.equals(path)) {
+                                //更新路径
+                                logger.info("可能转码,更新路径:" + filePath);
+                                String newPath = parentPath + "/" + ConstantPath.DETAIL + "/../" + file.getName();
+                                newPath = newPath.replaceAll("\\\\", "/");
+                                movie.setLocalPath(newPath);
+                                reService.updateMoviePath(movie);
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             } else {
@@ -206,9 +229,13 @@ public class InitService {
         } else if (type.equals("无码") || type.equals("动画")) {
             //不做处理加入到movie中
             if (unMovies != null) {
+                String name=file.getName();
                 unMovies.add(Movie.CreateNMovie(file));
-            } else
+            } else {
                 unMovies = new ArrayList<>();
+                unMovies.add(Movie.CreateNMovie(file));
+            }
+
         }
     }
 

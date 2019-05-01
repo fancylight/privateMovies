@@ -42,7 +42,7 @@ public class Reptile implements ReptileDataInterface {
     private int timeOutRe = 10;//超时重调次数
     private int nowRe = timeOutRe;
     private int wait = 500;//每次请求休眠时间,默认500ms
-
+    Logger logger = LogManager.getLogger(Reptile.class);
     //设置失败重调次数
     public void setTimeOutRe(int timeOutRe) {
         this.timeOutRe = timeOutRe;
@@ -53,7 +53,6 @@ public class Reptile implements ReptileDataInterface {
         this.wait = wait;
     }
 
-    Logger logger = LogManager.getLogger(Reptile.class);
 
     public Reptile(String initUrl) {
         this.initUrl = initUrl;
@@ -109,6 +108,15 @@ public class Reptile implements ReptileDataInterface {
     }
 
     //TODO:修改跑虫架构  修改为while 队列模式,否则当递归过多还导致栈溢出
+
+    /**
+     * 关于实现多线程和阻塞队列的方式
+     * 1.此类属于消费者和生产者,即从url队列获取连接信息,进行连接,并且创建doc队列
+     * 2.methodStep的子类也就属于消费者和生产者,从doc拿取数据进行分析,并且新增连接队列
+     * 3.如何停止消费死循环
+     * @param url
+     * @param deep
+     */
     public void getRe(String url, int deep) {
         Connection connection = Jsoup.connect(url).proxy(proxy);
         connection.headers(methods.get(deep).getHeader());

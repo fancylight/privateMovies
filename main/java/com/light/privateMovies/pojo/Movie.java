@@ -171,7 +171,9 @@ public class Movie {
      */
     public static Movie  CreateNMovie(File file) {
         Movie movie = new Movie();
-        movie.setMovieName(ReptileUtil.pathToName(file.getName()));
+        String name=file.getName();
+        name=name.substring(0,name.lastIndexOf("."));
+        movie.setMovieName(name);
         movie.setLocalPath(ReptileUtil.dealDouble(file.getPath()));
         movie.setCreateTime(LocalDateTime.now());
         movie.setActors(new ArrayList<>());

@@ -150,11 +150,18 @@ public class FileUtil {
         }
     }
 
-    public static void deleteDir(String dir, Set<String> modules) {
+    /**
+     * 删除dir文件夹,若dir文件夹是模块文件夹,则说明目标本身是裸漏在模块文件夹下的,仅仅删除本体就好
+     *
+     * @param dir
+     */
+    public static void deleteDir(String dir, String targetPath, String modulePath) {
         logger.warn(dir + "删除");
-        String[] temp = dir.replaceAll("\\\\", "/").split("/");
-        if (temp.length == 2 && modules.contains(temp[1])) {
-            logger.error("要删除模块????????---------退出");
+        String temp = dir.replaceAll("\\\\", "/");
+        String temp2 = modulePath.replaceAll("\\\\", "/");
+        if (temp.equals(temp2)) {
+            logger.info("该文件暴漏,仅仅删除该文件");
+            new File(targetPath).delete();
             return;
         }
         scanDir(new AbstractFileDeal() {
@@ -174,11 +181,12 @@ public class FileUtil {
 
     /**
      * 获取路径的第x部分,0表示最左边的部分
+     *
      * @param localPath
      * @param i
      * @return
      */
     public static String getPathPart(String localPath, int i) {
-        return localPath.replaceAll("\\\\","/").split("/")[i];
+        return localPath.replaceAll("\\\\", "/").split("/")[i];
     }
 }

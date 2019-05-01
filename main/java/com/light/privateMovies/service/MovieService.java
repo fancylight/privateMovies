@@ -58,6 +58,10 @@ public class MovieService {
         return movieHashMap;
     }
 
+    public void setHasBuf(boolean hasBuf) {
+        this.hasBuf = hasBuf;
+    }
+
     //返回字幕位置,但是不包括盘符,否则400
     public List<String> getSubs(String movieName) {
         var list = subDeal.getSubPath(movieName);
@@ -164,7 +168,11 @@ public class MovieService {
         return movieHashMap.get(movieName).get(0);
     }
 
-    //缓存并获取所有movie list
+    /**
+     * 获取数据库中电影
+     *
+     * @return
+     */
     public List<Movie> getAllMovies() {
         if (!hasBuf) {
             movieHashMap = movieDao.getAll().stream().collect(Collectors.groupingBy(Movie::getMovieName));
@@ -187,7 +195,9 @@ public class MovieService {
             moduleMovies.put(module, list);
             movieHashMap.remove(movieName);
             //调用数据库并且删除本地
-            movieDao.delete(m, moduleMovies.keySet());
+            var modules = moduleDao.getModuleByName(module);
+            var mm = modules.get(0);
+            movieDao.delete(m, mm.getLocalPath());
         }
         return movieName;
     }
