@@ -11,6 +11,10 @@ public class ConnectionTarget {
     private int deep;
     private boolean isPoison;
 
+    public ConnectionTarget(int deep) {
+        this.deep = deep;
+    }
+
     public void setReConnectionTimes(int reConnectionTimes) {
         this.reConnectionTimes = reConnectionTimes;
     }

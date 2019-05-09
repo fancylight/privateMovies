@@ -189,4 +189,16 @@ public class FileUtil {
     public static String getPathPart(String localPath, int i) {
         return localPath.replaceAll("\\\\", "/").split("/")[i];
     }
+
+    /**
+     * jdk中文件名称带有后缀
+     * @param nameWithType
+     * @return
+     */
+    public static String getFileName(String nameWithType){
+        if (nameWithType.indexOf(".")<0)
+            return nameWithType;
+        else
+            return nameWithType.substring(0,nameWithType.lastIndexOf("."));
+    }
 }

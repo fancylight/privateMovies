@@ -27,10 +27,9 @@ public class TaskBlock implements Runnable {
     public void run() {
         try {
             while (!isTer) {
-                System.out.println("task线程");
                 var task = taskTargets.take();
                 if (task.isPoison()) {
-                    System.out.println("毒药退出线程" + Thread.currentThread().getName());
+                    log.warn("毒药退出线程" + Thread.currentThread().getName());
                     break;
                 }
                 var re = task.getResponse();

@@ -99,6 +99,8 @@ public class MovieService {
             //判断该电影是任然存在
             var target = movies.stream().filter(movie -> {
                 if (new File(movie.getLocalPath()).exists()) {
+                    //给电影添加上模块名
+                    movie.setModuleTypeName(m.getModuleType().getTypeName());
                     return true;
                 }
                 return false;
@@ -189,7 +191,7 @@ public class MovieService {
      */
     public String deleteMovie(String movieName) {
         var m = movieHashMap.get(movieName).get(0);
-        var module = getModuleName(m);
+        var module = m.getModuleTypeName();
         if (!module.equals("")) {
             var list = moduleMovies.get(module).stream().filter(t -> !t.getMovieName().equals(m.getMovieName())).collect(Collectors.toList());
             moduleMovies.put(module, list);
@@ -203,12 +205,14 @@ public class MovieService {
     }
 
     /**
-     * //todo:这里的处理都是我没有在movie中添加module id字段造成的
+     *  该函数弃用
      * 获取模块名称
      *
      * @param movie
      * @return
+     *
      */
+    @Deprecated
     private String getModuleName(Movie movie) {
         if (movie != null)
             return movie.getLocalPath().split("/")[1];

@@ -333,6 +333,8 @@ public class IndexController {
                 var type = new MovieType("中文");
                 type = movieType.addNoExist(type);
                 movie.getMovieTypes().add(type);
+                //fixme:因为我仅仅写了关于av类型的爬虫,因此非该类型最好跳过数据库操作
+                if (movie.getModuleTypeName().equals("av"))
                 movieService.update(movie);
             }
 

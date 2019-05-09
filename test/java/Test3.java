@@ -111,6 +111,6 @@ public class Test3 {
     //测试srt处理
     @Test
     public void subDeal(){
-        SubDeal.SubToVtt(new File("F:\\heydouga4146-169-1.srt"));
+//        SubDeal.SubToVtt(new File("F:\\heydouga4146-169-1.srt"));
     }
 }

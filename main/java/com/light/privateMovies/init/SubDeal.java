@@ -27,12 +27,14 @@ public class SubDeal {
     private Set<String> t = new HashSet<>();
     private String sp = "分割字幕";
     private Logger logger = LogManager.getLogger(this.getClass());
+    private String movieSubDir = SubDir + "/电影/";
 
     public SubDeal() {
         init();
     }
 
     private void init() {
+        //最开始写的时候仅仅考虑av类型
         FileUtil.scanDir(new AbstractFileDeal() {
             @Override
             public void deal(File file, String[] targetType, String parentPath) {
@@ -45,12 +47,32 @@ public class SubDeal {
                         subMap.get(code).add(file.getPath());
 //                        SubToVtt(file);
                     } else {
-                        subMap.put(code, new ArrayList<>());
+                        var list = new ArrayList<String>();
+                        list.add(file.getPath());
+                        subMap.put(code, list);
 //                        SubToVtt(file);
                     }
                 }
             }
         }, SubDir, targets, "");
+        //添加一般电影字幕
+        FileUtil.scanDir(new AbstractFileDeal() {
+            @Override
+            public void deal(File file, String[] targetType, String parentPath) {
+                if (ReptileUtil.filterTarget(file.getName(), targets)) {
+                    String code = FileUtil.getFileName(file.getName());
+                    if (subMap.containsKey(code)) {
+                        subMap.get(code).add(file.getPath());
+                    } else {
+                        SubToVtt(file);
+                        var list = new ArrayList<String>();
+                        list.add(file.getPath());
+                        subMap.put(code, list);
+                        subMap.put(code, list);
+                    }
+                }
+            }
+        }, movieSubDir, targets, "");
         logger.info("共有" + subMap.size() + "字幕");
     }
 
@@ -77,18 +99,18 @@ public class SubDeal {
             var pattern = Pattern.compile("^[0-9]+$"); //删除只有数字的行
             List<String> list = null;
             //0编码
-            var pp= CodepageDetectorProxy.getInstance();
+            var pp = CodepageDetectorProxy.getInstance();
             pp.add(UnicodeDetector.getInstance());
             pp.add(JChardetFacade.getInstance());
             pp.add(ASCIIDetector.getInstance());
-            String name="utf-8";
+            String name = "utf-8";
             try {
-                name=pp.detectCodepage(file.toURL()).name();
+                name = pp.detectCodepage(file.toURL()).name();
             } catch (IOException e) {
                 e.printStackTrace();
             }
             //1.清楚不符合的行
-            try (var in = new BufferedReader(new FileReader(file,Charset.forName(name)))) {
+            try (var in = new BufferedReader(new FileReader(file, Charset.forName(name)))) {
                 list = in.lines().filter(s -> !pattern.matcher(s).matches()).collect(Collectors.toList());
 
             } catch (FileNotFoundException e) {
@@ -106,7 +128,7 @@ public class SubDeal {
                     list.stream().forEach(t -> {
                         try {
                             //总之此处要做这个转换
-                            out.write(t.replaceAll(",","."));
+                            out.write(t.replaceAll(",", "."));
                             out.newLine();
                         } catch (IOException e) {
                             e.printStackTrace();

@@ -4,6 +4,7 @@ import com.light.privateMovies.reptile.core.newCore.ConnectionTarget;
 import com.light.privateMovies.reptile.core.newCore.TaskTarget;
 import org.jsoup.Connection;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
@@ -13,7 +14,7 @@ import java.util.concurrent.BlockingQueue;
  * @param <E>
  */
 public abstract class AbstractDataResult<E> implements DataResult<E> {
-    protected List<StepTask> stepTasks;
+    private List<StepTask> stepTasks = new ArrayList<>();
     protected E data;
     //连接线程消耗,由任务处理线程创建
     private BlockingQueue<ConnectionTarget> connectionTargets;
@@ -22,7 +23,12 @@ public abstract class AbstractDataResult<E> implements DataResult<E> {
     private int conCount;
     private int taskCount;
     private boolean hasStop;
+    //表示任务开始的连接
+    public ConnectionTarget target;
 
+    public AbstractDataResult(ConnectionTarget target) {
+        this.target = target;
+    }
 
     @Override
     public void TaskDo(int deep, Connection.Response response) {
@@ -35,11 +41,22 @@ public abstract class AbstractDataResult<E> implements DataResult<E> {
     public E getData() {
         return data;
     }
+    protected synchronized void addNewStepTask(StepTask stepTask){
+        stepTasks.add(stepTask);
+    }
+    protected void addNewConnection(ConnectionTarget target) {
+        try {
+            connectionTargets.put(target);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     //通过毒药停止消费者-生产者线程
     protected synchronized void stop() {
         if (!hasStop) {
             for (int index = 0; index < conCount; index++) {
-                var conPoison = new ConnectionTarget();
+                var conPoison = new ConnectionTarget(-1);
                 conPoison.setPoison(true);
                 connectionTargets.add(conPoison);
             }
@@ -50,6 +67,12 @@ public abstract class AbstractDataResult<E> implements DataResult<E> {
             }
         }
         hasStop = true;
+    }
+
+    protected ConnectionTarget createCon(int deep, String url) {
+        var con = new ConnectionTarget(deep);
+        con.setUrl(url);
+        return con;
     }
 
     public int getConCount() {

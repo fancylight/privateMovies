@@ -224,12 +224,12 @@ public class InitService {
             } else {
                 logger.warn(filePath + "不是一个番号");
             }
-        } else if (type.equals("movie")) {
+        } else if (type.equals("电影")) {
             //假设从豆瓣拿取数据
         } else if (type.equals("无码") || type.equals("动画")) {
             //不做处理加入到movie中
             if (unMovies != null) {
-                String name=file.getName();
+                String name = file.getName();
                 unMovies.add(Movie.CreateNMovie(file));
             } else {
                 unMovies = new ArrayList<>();
@@ -278,7 +278,7 @@ public class InitService {
     private List<AInitTask> aInitTasks = new ArrayList<>();
 
     /**
-     * 爬取数据的任务队列
+     * 爬取AV数据的任务队列
      */
     class AInitTask {
         private String code;
@@ -314,6 +314,20 @@ public class InitService {
             re.getMovie().setCreateTime(LocalDateTime.now());
             re.getMovie().setMovieTypes(types);
             reService.saveReptileData(re);
+        }
+    }
+
+    /**
+     * 获取正常电影数据
+     */
+    class MInitTask extends AInitTask {
+
+        public MInitTask(String code, String filePath) {
+            super(code, filePath);
+        }
+
+        @Override
+        public void task() {
         }
     }
 }

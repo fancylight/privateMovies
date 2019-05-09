@@ -22,9 +22,9 @@ public class FrameReptile {
     /**
      * 根据初始目标进行处理
      * 最终的数据通过传递过来的AbstractDataResult,用户自行获取
-     * @param target
      */
-    public void start(ConnectionTarget target) {
+    public void start() {
+        ConnectionTarget target=abstractDataResult.target;
         int count = Runtime.getRuntime().availableProcessors();
         List<Future> list = new ArrayList<>();
         List<Future> list2 = new ArrayList<>();
