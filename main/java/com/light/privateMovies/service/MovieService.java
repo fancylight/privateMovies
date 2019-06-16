@@ -94,19 +94,22 @@ public class MovieService {
         modules.stream().forEach(m -> {
             ArrayList<Movie> list = new ArrayList<>();
             //获取指定模块路径中的数据
-            var movies = getMoviesByModuleAll(FileUtil.getPathPart(m.getLocalPath(), 1));
+            String module = FileUtil.getPathPart(m.getLocalPath(), 0) + "/" + FileUtil.getPathPart(m.getLocalPath(), 1);
+            var movies = getMoviesByModuleAll(module);
             moduleMovies.put(m.getModuleName(), list);
             //判断该电影是任然存在
             var target = movies.stream().filter(movie -> {
                 if (new File(movie.getLocalPath()).exists()) {
                     //给电影添加上模块名
                     movie.setModuleTypeName(m.getModuleType().getTypeName());
+                    movie.setModuleName(m.getModuleName());
                     return true;
                 }
                 return false;
             }).collect(Collectors.toList());
             list.addAll(target);
         });
+        int a = 3;
     }
 
     /**
@@ -133,11 +136,7 @@ public class MovieService {
             name = name.substring(0, name.indexOf("part"));
             isPart = true;
         }
-        Movie m = null;
-        if (hasBuf) {
-            m = movieHashMap.containsKey(name) ? movieHashMap.get(name).get(0) : null;
-        } else
-            m = movieDao.getMovieByMovieName(name);
+        Movie m = getMovieByName(name);
         if (m != null) {
             if (!isPart)
                 return m.getLocalPath();
@@ -163,11 +162,18 @@ public class MovieService {
         return moduleMovies.get(modulePath).stream().collect(Collectors.toList());
     }
 
+    //TODO:由于window文件不区分大小写,因此导致我这里有个bug,要对电影名按照大小写查询一次
     public Movie getMovieByName(String movieName) {
         if (!hasBuf) {
             return movieDao.getMovieByMovieName(movieName);
         }
-        return movieHashMap.get(movieName).get(0);
+        List<Movie> movies;
+        movies = movieHashMap.get(movieName);
+        if (movies == null)
+            movies = movieHashMap.get(movieName.toUpperCase());
+        if (movies == null)
+            movies = movieHashMap.get(movieName.toLowerCase());
+        return movies == null ? null : movies.get(0);
     }
 
     /**
@@ -191,7 +197,7 @@ public class MovieService {
      */
     public String deleteMovie(String movieName) {
         var m = movieHashMap.get(movieName).get(0);
-        var module = m.getModuleTypeName();
+        var module = m.getModuleName();
         if (!module.equals("")) {
             var list = moduleMovies.get(module).stream().filter(t -> !t.getMovieName().equals(m.getMovieName())).collect(Collectors.toList());
             moduleMovies.put(module, list);
@@ -199,18 +205,18 @@ public class MovieService {
             //调用数据库并且删除本地
             var modules = moduleDao.getModuleByName(module);
             var mm = modules.get(0);
-            movieDao.delete(m, mm.getLocalPath());
+            boolean simple = m.getModuleTypeName().equals("av") ? false : true;
+            movieDao.delete(m, mm.getLocalPath(), simple);
         }
         return movieName;
     }
 
     /**
-     *  该函数弃用
+     * 该函数弃用
      * 获取模块名称
      *
      * @param movie
      * @return
-     *
      */
     @Deprecated
     private String getModuleName(Movie movie) {

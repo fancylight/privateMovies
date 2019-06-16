@@ -8,7 +8,7 @@ public class ConnectionTarget {
     private String url;
     private TaskType taskType;
     private int reConnectionTimes = 5;
-    private int deep;
+    private int deep; //deep实际表示应该对应的task
     private boolean isPoison;
 
     public ConnectionTarget(int deep) {

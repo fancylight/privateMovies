@@ -38,10 +38,10 @@ public class ConnectionBlock implements Runnable {
                     logger.warn("毒药退出线程" + Thread.currentThread().getName());
                     break;
                 }
-
                 //此处有可能出现连接失败,设置一个重新连接次数
                 Connection.Response response = null;
                 try {
+                    logger.info("链接"+target.getUrl());
                     var connection = Jsoup.connect(target.getUrl()).proxy(proxy);
                     response = connection.method(Connection.Method.GET).ignoreContentType(true).ignoreHttpErrors(true).execute();
 

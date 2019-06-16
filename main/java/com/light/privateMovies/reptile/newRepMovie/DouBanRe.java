@@ -39,7 +39,7 @@ public class DouBanRe extends AbstractDataResult<Result> {
                 }
                 if (!nextLink.equals("")) {
                     log.info(movieName);
-                    var Con = createCon(1, nextLink);
+                    var Con = createConnection(nextLink, 1);
                     addNewStepTask(new realMovie());
                     addNewConnection(Con);
                 } else {

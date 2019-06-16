@@ -2,10 +2,13 @@ package com.light.privateMovies.reptile.core.newCore.data;
 
 import com.light.privateMovies.reptile.core.newCore.ConnectionTarget;
 import com.light.privateMovies.reptile.core.newCore.TaskTarget;
+import com.light.privateMovies.reptile.util.SimData;
 import org.jsoup.Connection;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 /**
@@ -25,6 +28,11 @@ public abstract class AbstractDataResult<E> implements DataResult<E> {
     private boolean hasStop;
     //表示任务开始的连接
     public ConnectionTarget target;
+    //默认header
+    private Map header;
+
+    public AbstractDataResult() {
+    }
 
     public AbstractDataResult(ConnectionTarget target) {
         this.target = target;
@@ -41,9 +49,11 @@ public abstract class AbstractDataResult<E> implements DataResult<E> {
     public E getData() {
         return data;
     }
-    protected synchronized void addNewStepTask(StepTask stepTask){
+
+    protected synchronized void addNewStepTask(StepTask stepTask) {
         stepTasks.add(stepTask);
     }
+
     protected void addNewConnection(ConnectionTarget target) {
         try {
             connectionTargets.put(target);
@@ -69,11 +79,6 @@ public abstract class AbstractDataResult<E> implements DataResult<E> {
         hasStop = true;
     }
 
-    protected ConnectionTarget createCon(int deep, String url) {
-        var con = new ConnectionTarget(deep);
-        con.setUrl(url);
-        return con;
-    }
 
     public int getConCount() {
         return conCount;
@@ -97,5 +102,14 @@ public abstract class AbstractDataResult<E> implements DataResult<E> {
 
     public void setTaskTargets(BlockingQueue<TaskTarget> taskTargets) {
         this.taskTargets = taskTargets;
+    }
+
+    public ConnectionTarget createConnection(String url, int deep) {
+        var con = new ConnectionTarget(0);
+        con.setUrl(url);
+        if (header == null)
+            header = SimData.getHeader();
+        con.setHeaders(header);
+        return con;
     }
 }

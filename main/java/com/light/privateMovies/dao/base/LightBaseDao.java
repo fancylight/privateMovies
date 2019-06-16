@@ -17,8 +17,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
-@Repository
-public class LightBaseDao<T> implements BaseDao<T> {
+//@Repository
+public abstract class LightBaseDao<T> implements BaseDao<T> {
     protected Class<T> clazz;
     protected HibernateTemplate hibernateTemplate;
 

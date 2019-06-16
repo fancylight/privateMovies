@@ -182,8 +182,18 @@ public class Movie {
         movie.setMovieTypes(new ArrayList<>());
         return movie;
     }
-    //电影所属模块名,不通过数据库
+    //模块类型名
     private String moduleTypeName;
+    //所属模块名
+    private String moduleName;
+
+    public String getModuleName() {
+        return moduleName;
+    }
+
+    public void setModuleName(String moduleName) {
+        this.moduleName = moduleName;
+    }
 
     public String getModuleTypeName() {
         return moduleTypeName;

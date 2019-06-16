@@ -45,12 +45,12 @@ public class SubDeal {
                         code = ReptileUtil.getACode2(file.getPath());
                     if (subMap.containsKey(code)) {
                         subMap.get(code).add(file.getPath());
-//                        SubToVtt(file);
+                        SubToVtt(file);
                     } else {
                         var list = new ArrayList<String>();
                         list.add(file.getPath());
                         subMap.put(code, list);
-//                        SubToVtt(file);
+                        SubToVtt(file);
                     }
                 }
             }

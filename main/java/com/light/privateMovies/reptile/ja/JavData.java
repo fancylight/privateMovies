@@ -42,7 +42,17 @@ public class JavData {
     private byte[] cover;
     private HashMap<String, byte[]> actor = new HashMap();
     private HashMap<String, byte[]> detail = new HashMap();
-
+    //搜索时的path,由于该网站有时候会更新rest接口
+    private static String searchPath;
+    static {
+        var pro=new Properties();
+        try {
+            pro.load(JavData.class.getResourceAsStream("/config/targetConifg.properties"));
+            searchPath=pro.getProperty("javSearch");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     public void setCode(String code) {
         this.code = code;
     }
@@ -354,7 +364,7 @@ public class JavData {
      * @return
      */
     public List<MovieType> getType() {
-        var step = new JavStep("/" + code, "www.javbus.com", "https", ReptileUtil.getBrowerParas(), new HashMap<>());
+        var step = new JavStep(searchPath+ code, "www.javbus.com", "https", ReptileUtil.getBrowerParas(), new HashMap<>());
         new Reptile(Collections.singletonList(step)).init();
         return types;
     }

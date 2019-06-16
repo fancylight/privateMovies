@@ -52,12 +52,16 @@ public class MovieDao extends LightBaseDao<Movie> {
 
     //todo:删除操作要分情况,典型的文件夹应该是   模块/演员/作品名/作品,要排除不是这种情况
     //解决方法1:将暴露在模块下的电影创建一个同名文件夹
-    public void delete(Movie movie, String modulePath) {
+    public void delete(Movie movie, String modulePath, boolean simple) {
         super.delete(movie);
         //删除本地文件
         try {
-            String targetPath=new File(movie.getLocalPath()).getCanonicalPath();
-            String dirPath=new File(targetPath+"/..").getCanonicalPath();
+            String targetPath = new File(movie.getLocalPath()).getCanonicalPath();
+            if (simple) {
+                new File(targetPath).delete();
+                return;
+            }
+            String dirPath = new File(targetPath + "/..").getCanonicalPath();
             FileUtil.deleteDir(dirPath, targetPath, modulePath);
         } catch (IOException e) {
             e.printStackTrace();

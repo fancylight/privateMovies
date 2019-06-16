@@ -192,13 +192,40 @@ public class FileUtil {
 
     /**
      * jdk中文件名称带有后缀
+     *
      * @param nameWithType
      * @return
      */
-    public static String getFileName(String nameWithType){
-        if (nameWithType.indexOf(".")<0)
+    public static String getFileName(String nameWithType) {
+        if (nameWithType.indexOf(".") < 0)
             return nameWithType;
         else
-            return nameWithType.substring(0,nameWithType.lastIndexOf("."));
+            return nameWithType.substring(0, nameWithType.lastIndexOf("."));
+    }
+
+    /**
+     * 清除路径中除了最后一个点以及路径中的空格
+     *
+     * @param path
+     * @return
+     */
+    public static String cleanPath(String path) {
+        path = path.replaceAll("\\\\", "/");
+        var paths = path.split("/");
+        var files = paths[paths.length - 1].split("\\.");
+        //清除文件名中的多余.以及空格
+        files[files.length - 1] = "." + files[files.length - 1];
+        String newName = "";
+        for (String p : files) {
+            newName += p.replaceAll(" ", "");
+        }
+        paths[paths.length - 1] = newName;
+        String newPath = paths[0] + "/" + paths[1];
+        //清除路径中多余空格和点
+        for (int index = 2; index < paths.length - 1; index++) {
+            newPath += "/" + paths[index].replaceAll(" ", "").replaceAll("\\.", "");
+        }
+        newPath += "/" + newName;
+        return newPath;
     }
 }

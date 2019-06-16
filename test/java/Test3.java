@@ -1,9 +1,12 @@
 import com.light.privateMovies.init.SubDeal;
 import com.light.privateMovies.pojo.Movie;
+import com.light.privateMovies.reptile.core.ReptileUtil;
 import com.light.privateMovies.reptile.ja.ArzonData;
 import com.light.privateMovies.reptile.annotation.Step;
 import com.light.privateMovies.reptile.ja.JavData;
+import com.light.privateMovies.reptile.util.SimData;
 import com.light.privateMovies.util.FileUtil;
+import com.light.privateMovies.util.fileTargetDeal.AbstractFileDeal;
 import org.jsoup.Jsoup;
 import org.testng.annotations.Test;
 
@@ -108,9 +111,33 @@ public class Test3 {
         var subs = new SubDeal();
         System.out.println(subs.getSubPath("ABP041"));
     }
+
     //测试srt处理
     @Test
-    public void subDeal(){
+    public void subDeal() {
 //        SubDeal.SubToVtt(new File("F:\\heydouga4146-169-1.srt"));
+    }
+
+    @Test
+    public void pro() {
+        System.out.println(SimData.getHeader());
+    }
+
+
+    //遍历文件处理其中的空格和.
+    //todo: 这个逻辑可以放在init中
+    @Test
+    public void fileCleanTest() {
+        FileUtil.scanDir(new AbstractFileDeal() {
+            @Override
+            public void deal(File file, String[] targetType, String parentPath) {
+                if (ReptileUtil.filterTarget(ReptileUtil.getType(file.getPath()), targetType)) {
+                    String newFile = FileUtil.cleanPath(file.getPath());
+                    if (new File(file.getPath() + "/..").isDirectory())
+                        new File(newFile + "/..").mkdirs();
+                    new File(file.getPath()).renameTo(new File(newFile));
+                }
+            }
+        }, "H:\\kb", new String[]{"mp4", "mkv", "avi", "wmk", "wmv"}, "");
     }
 }

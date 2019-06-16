@@ -224,10 +224,12 @@ public class InitService {
             } else {
                 logger.warn(filePath + "不是一个番号");
             }
-        } else if (type.equals("电影")) {
             //假设从豆瓣拿取数据
-        } else if (type.equals("无码") || type.equals("动画")) {
-            //不做处理加入到movie中
+        } else if (type.equals("电影")) {
+
+        } else if (type.equals("无码") || type.equals("动画") || type.equals("欧美")) {
+            //去除该文件的所有空格 以及除了最后一个.
+
             if (unMovies != null) {
                 String name = file.getName();
                 unMovies.add(Movie.CreateNMovie(file));
@@ -235,7 +237,6 @@ public class InitService {
                 unMovies = new ArrayList<>();
                 unMovies.add(Movie.CreateNMovie(file));
             }
-
         }
     }
 
@@ -309,6 +310,7 @@ public class InitService {
         }
 
         private void insertData(Result re) {
+            //fixme: 此处有未处理的逻辑,如果此处返回的类型为空,也就是说jav网站没有获取到数据,此处会造成空指针异常,这里异常事物我没有做处理
             var types = new JavData(re.getMovie().getMovieName()).getType();
             reService.addTypeList(types);
             re.getMovie().setCreateTime(LocalDateTime.now());
