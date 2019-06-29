@@ -10,7 +10,7 @@ gen
 /main/resources/
 /test/java/
 
-/main/webapp/
+
 
 /main/webapp/stylesheets/bootstrap-treeview.css
 /main/webapp/stylesheets/bootstrap-grid.css

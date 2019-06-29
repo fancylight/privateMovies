@@ -315,7 +315,12 @@ public class IndexController {
         movieName = ReptileUtil.pathToName(movieName);
         return movieService.deleteMovie(movieName);
     }
-
+    @RequestMapping("/favorite")
+    public String favoriteDeal(@RequestParam(name ="movieName") String movieName){
+        String re="fail";
+        re= new Boolean(movieService.setFavorite(movieName)).toString();
+        return re;
+    }
     /**
      * 创建movieData数据
      *
@@ -372,6 +377,5 @@ public class IndexController {
         String typeName = local.substring(local.lastIndexOf("/") + 1);
         return "/movie/" + t.getMovieName() + "/" + typeName;
     }
-
 
 }

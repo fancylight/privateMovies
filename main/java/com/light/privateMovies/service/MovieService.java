@@ -6,6 +6,7 @@ import com.light.privateMovies.init.SubDeal;
 import com.light.privateMovies.pojo.Movie;
 import com.light.privateMovies.reptile.core.ReptileUtil;
 import com.light.privateMovies.util.FileUtil;
+import com.light.privateMovies.util.fileTargetDeal.AbstractFileDeal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ import java.util.stream.Stream;
 public class MovieService {
     private MovieDao movieDao;
     private ModuleDao moduleDao;
+    private ModuleService moduleService;
     private boolean hasBuf = false;
     //缓冲模块对应本地实际包含的电影
     private HashMap<String, List<Movie>> moduleMovies = new HashMap<>();
@@ -36,6 +38,15 @@ public class MovieService {
 
     public void setPartMovies(HashMap<String, List<String>> partMovies) {
         this.partMovies = partMovies;
+    }
+
+    public ModuleService getModuleService() {
+        return moduleService;
+    }
+
+    @Autowired
+    public void setModuleService(ModuleService moduleService) {
+        this.moduleService = moduleService;
     }
 
     @Autowired
@@ -91,6 +102,7 @@ public class MovieService {
 //        movieHashMap = movieDao.getAll().stream().collect(Collectors.groupingBy(Movie::getMovieName));
 //        hasBuf = true;
         var modules = moduleDao.getAll();
+        moduleMovies.put("favorite", new ArrayList<>());
         modules.stream().forEach(m -> {
             ArrayList<Movie> list = new ArrayList<>();
             //获取指定模块路径中的数据
@@ -103,13 +115,14 @@ public class MovieService {
                     //给电影添加上模块名
                     movie.setModuleTypeName(m.getModuleType().getTypeName());
                     movie.setModuleName(m.getModuleName());
+                    if (movie.isFavorite())
+                        moduleMovies.get("favorite").add(movie);
                     return true;
                 }
                 return false;
             }).collect(Collectors.toList());
             list.addAll(target);
         });
-        int a = 3;
     }
 
     /**
@@ -243,5 +256,56 @@ public class MovieService {
 
     public List<String> getPartList(String movieName) {
         return this.partMovies.get(movieName);
+    }
+
+    /**
+     * 按照模块路径扫描电影,若硬盘存在电影,并在数据库中也存在,则改变数据库中movie#module
+     */
+    public void movieModuleScanAndDeal(String[] target) {
+        var moduleEntries = moduleService.getAllModule();
+        moduleEntries.stream().filter(m -> {
+            String typeName = m.getModuleType().getTypeName();
+            return typeName.equals("av") ? true : false;
+
+        }).forEach(moduleEntry -> {
+            FileUtil.scanDir(new AbstractFileDeal() {
+                @Override
+                public void deal(File file, String[] targetType, String parentPath) {
+                    String filePath = file.getPath();
+                    if (ReptileUtil.filterTarget(ReptileUtil.getType(filePath), target)) {
+                        String diskName = FileUtil.getFileName(file.getName());
+                        Movie movie = movieDao.getMovieByMovieName(diskName);
+                        if (movie != null) {
+                            movie.setModuleEntry(moduleEntry);
+                            movieDao.update(movie);
+                        }
+                    }
+                }
+            }, moduleEntry.getLocalPath(), target, "");
+        });
+    }
+
+    public boolean setFavorite(String name) {
+        var movie = getMovieByName(name);
+        if (movie != null) {
+            boolean now = !movie.isFavorite();
+            movie.setFavorite(now);
+            movieDao.update(movie);
+            if (!moduleMovies.get("favorite").contains(movie))
+                moduleMovies.get("favorite").add(movie);
+            if (now == false) {
+                moduleMovies.get("favorite").remove(movie);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public void setFavorite(Movie movie, boolean isFavorite) {
+        if (movie != null) {
+            movie.setFavorite(isFavorite);
+            movieDao.update(movie);
+        }
+        moduleMovies.get("favorite").remove(movie);
     }
 }

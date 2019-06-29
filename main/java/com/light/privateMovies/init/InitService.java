@@ -69,8 +69,10 @@ public class InitService {
         movieService.getAllMovies();
         scanLocal(list);
         logger.info("前台缓冲");
+        movieService.movieModuleScanAndDeal(target);
         //重新缓冲
         movieService.setHasBuf(false);
+        //处理电影模块分类
         movieService.getAllMovies();
         //添加无码部分
         unMovies.stream().forEach(movie -> movieService.addMovieToCache(movie));
@@ -332,4 +334,5 @@ public class InitService {
         public void task() {
         }
     }
+
 }

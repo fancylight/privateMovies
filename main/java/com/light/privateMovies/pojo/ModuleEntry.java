@@ -1,7 +1,6 @@
 package com.light.privateMovies.pojo;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
 
@@ -17,7 +16,6 @@ public class ModuleEntry {
     private String localPath;
     @ManyToOne
     @JoinColumn(name = "module_type_id")
-//    @JsonIgnore
     private ModuleType moduleType;
 
     public Integer getId() {

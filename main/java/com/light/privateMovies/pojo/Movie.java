@@ -4,12 +4,12 @@ package com.light.privateMovies.pojo;
 import com.light.privateMovies.reptile.core.ReptileUtil;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.io.File;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -20,7 +20,7 @@ public class Movie {
     @Id
     @GeneratedValue
     private Integer id;
-    @Column(name = "movie_name",unique = true,columnDefinition = "varchar(40)")
+    @Column(name = "movie_name", unique = true, columnDefinition = "varchar(40)")
     private String movieName;
     @Lob
     @Column(name = "movie_cover", columnDefinition = "mediumblob")
@@ -37,6 +37,30 @@ public class Movie {
     private String localPath;
     @Column(name = "create_time")
     private LocalDateTime createTime;
+    @ManyToOne
+    @JoinColumn(name = "modules_id")
+    private ModuleEntry moduleEntry;
+    @Column(name = "favorite")
+    @Type(type = "yes_no")
+    private Boolean favorite;
+
+    public boolean isFavorite() {
+        if (favorite == null)
+            return false;
+        return favorite;
+    }
+
+    public void setFavorite(boolean favorite) {
+        this.favorite = favorite;
+    }
+
+    public ModuleEntry getModuleEntry() {
+        return moduleEntry;
+    }
+
+    public void setModuleEntry(ModuleEntry moduleEntry) {
+        this.moduleEntry = moduleEntry;
+    }
 
     public LocalDateTime getCreateTime() {
         return createTime;
@@ -167,12 +191,13 @@ public class Movie {
 
     /**
      * 创建的不从爬虫拿取数据的情况
+     *
      * @param file
      */
-    public static Movie  CreateNMovie(File file) {
+    public static Movie CreateNMovie(File file) {
         Movie movie = new Movie();
-        String name=file.getName();
-        name=name.substring(0,name.lastIndexOf("."));
+        String name = file.getName();
+        name = name.substring(0, name.lastIndexOf("."));
         movie.setMovieName(name);
         movie.setLocalPath(ReptileUtil.dealDouble(file.getPath()));
         movie.setCreateTime(LocalDateTime.now());
@@ -182,6 +207,7 @@ public class Movie {
         movie.setMovieTypes(new ArrayList<>());
         return movie;
     }
+
     //模块类型名
     private String moduleTypeName;
     //所属模块名
