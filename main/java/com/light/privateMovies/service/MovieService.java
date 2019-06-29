@@ -1,17 +1,21 @@
 package com.light.privateMovies.service;
 
+import com.google.gson.JsonObject;
+import com.light.privateMovies.constant.MovieFileConstant;
 import com.light.privateMovies.dao.ModuleDao;
 import com.light.privateMovies.dao.MovieDao;
 import com.light.privateMovies.init.SubDeal;
 import com.light.privateMovies.pojo.Movie;
 import com.light.privateMovies.reptile.core.ReptileUtil;
 import com.light.privateMovies.util.FileUtil;
+import com.light.privateMovies.util.JsonUtil;
 import com.light.privateMovies.util.fileTargetDeal.AbstractFileDeal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -102,7 +106,7 @@ public class MovieService {
 //        movieHashMap = movieDao.getAll().stream().collect(Collectors.groupingBy(Movie::getMovieName));
 //        hasBuf = true;
         var modules = moduleDao.getAll();
-        moduleMovies.put("favorite", new ArrayList<>());
+        moduleMovies.put(MovieFileConstant.FAVORITE, new ArrayList<>());
         modules.stream().forEach(m -> {
             ArrayList<Movie> list = new ArrayList<>();
             //获取指定模块路径中的数据
@@ -116,13 +120,28 @@ public class MovieService {
                     movie.setModuleTypeName(m.getModuleType().getTypeName());
                     movie.setModuleName(m.getModuleName());
                     if (movie.isFavorite())
-                        moduleMovies.get("favorite").add(movie);
+                        moduleMovies.get(MovieFileConstant.FAVORITE).add(movie);
+                    if (!movie.getModuleTypeName().equals("av"))
+                        readExtraInfo(movie);
                     return true;
                 }
                 return false;
             }).collect(Collectors.toList());
             list.addAll(target);
         });
+    }
+
+    private void readExtraInfo(Movie movie) {
+        String jsonPath = movie.getLocalPath() + "/../" + movie.getMovieName() + MovieFileConstant.EXTRA_INFO_JSON_SUFFIX;
+        var json = new File(jsonPath);
+        var jsonObject = JsonUtil.jsonFromFile(json);
+        if (jsonObject == null) {
+            return;
+        }
+        boolean isFavorite = jsonObject.get(MovieFileConstant.FAVORITE).getAsBoolean();
+        movie.setFavorite(isFavorite);
+        if (isFavorite)
+            moduleMovies.get(MovieFileConstant.FAVORITE).add(movie);
     }
 
     /**
@@ -285,20 +304,50 @@ public class MovieService {
         });
     }
 
+    /**
+     * 设置favorite
+     * 1.数据库中存放的类型通过设置数据库就可以
+     * 2.没有存放在数据库中的则在文件路径额外添加一个extraInfo.json文件
+     *
+     * @param name
+     * @return
+     */
     public boolean setFavorite(String name) {
         var movie = getMovieByName(name);
         if (movie != null) {
             boolean now = !movie.isFavorite();
             movie.setFavorite(now);
-            movieDao.update(movie);
-            if (!moduleMovies.get("favorite").contains(movie))
-                moduleMovies.get("favorite").add(movie);
+            if (movie.getModuleTypeName().equals("av"))
+                movieDao.update(movie);
+            else
+                writeFavoriteJson(movie, now);
+            if (!moduleMovies.get(MovieFileConstant.FAVORITE).contains(movie))
+                moduleMovies.get(MovieFileConstant.FAVORITE).add(movie);
             if (now == false) {
-                moduleMovies.get("favorite").remove(movie);
+                moduleMovies.get(MovieFileConstant.FAVORITE).remove(movie);
             }
             return true;
         }
         return false;
+    }
+
+    private void writeFavoriteJson(Movie movie, boolean isFavorite) {
+        var json = movie.getLocalPath() + "/../" + movie.getMovieName() + MovieFileConstant.EXTRA_INFO_JSON_SUFFIX;
+        var file = new File(json);
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+                var jsonObject = new JsonObject();
+                jsonObject.addProperty(MovieFileConstant.FAVORITE, isFavorite);
+                JsonUtil.write(file, jsonObject);
+                return;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        JsonObject jsonObject = JsonUtil.jsonFromFile(file);
+        jsonObject.addProperty(MovieFileConstant.FAVORITE, isFavorite);
+        JsonUtil.write(file, jsonObject);
     }
 
     public void setFavorite(Movie movie, boolean isFavorite) {
@@ -306,6 +355,6 @@ public class MovieService {
             movie.setFavorite(isFavorite);
             movieDao.update(movie);
         }
-        moduleMovies.get("favorite").remove(movie);
+        moduleMovies.get(MovieFileConstant.FAVORITE).remove(movie);
     }
 }

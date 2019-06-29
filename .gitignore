@@ -11,6 +11,17 @@ gen
 /test/java/
 
 
+/main/webapp/javascripts/bootstrap.bundle.js
+/main/webapp/javascripts/bootstrap.bundle.js.map
+/main/webapp/javascripts/bootstrap.bundle.min.js
+/main/webapp/javascripts/bootstrap.bundle.min.js.map
+/main/webapp/javascripts/bootstrap.bundle.min.js.map
+/main/webapp/javascripts/bootstrap.js
+/main/webapp/javascripts/bootstrap.js.map
+/main/webapp/javascripts/bootstrap.min.js
+/main/webapp/javascripts/bootstrap.min.js.map
+/main/webapp/javascripts/bootstrap-treeview.js
+
 
 /main/webapp/stylesheets/bootstrap-treeview.css
 /main/webapp/stylesheets/bootstrap-grid.css

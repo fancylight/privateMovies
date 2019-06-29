@@ -40,7 +40,7 @@ public class Movie {
     @ManyToOne
     @JoinColumn(name = "modules_id")
     private ModuleEntry moduleEntry;
-    @Column(name = "favorite")
+    @Column(name = "FAVORITE")
     @Type(type = "yes_no")
     private Boolean favorite;
 
