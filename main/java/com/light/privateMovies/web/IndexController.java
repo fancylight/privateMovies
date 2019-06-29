@@ -278,14 +278,9 @@ public class IndexController {
      * @return
      */
     @RequestMapping("/getMoviesByType")
-    public List<MovieData> getMovieByActorName(@RequestParam(name = "type") String type, @RequestParam(name = "data") String data) {
+    public List<MovieData> getMoviesByTypeName(@RequestParam(name = "type") String type, @RequestParam(name = "data") String data) {
         List<Movie> movies = new ArrayList<>();
-        if (type.equals("actor"))
-            movies = movieService.getAllMovies().stream().filter(t -> t.getActors().stream().anyMatch(t2 -> t2.getActor_name().equals(data))).collect(Collectors.toList());
-        else if (type.equals("type"))
-            movies = movieService.getAllMovies().stream().filter(t -> t.getMovieTypes().stream().anyMatch(t2 -> t2.getMovieType().contains(data))).collect(Collectors.toList());
-        else if (type.equals("all"))
-            movies = movieService.getMoviesByKeyWord(data);
+        movies= movieService.getMoviesByType(type,data);
         return movies.stream().map(m -> getMovieDataByMovie(m)).collect(Collectors.toList());
     }
 

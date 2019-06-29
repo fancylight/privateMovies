@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -221,6 +222,12 @@ public class MovieService {
         return movieHashMap.values().stream().flatMap(t -> t.stream()).collect(Collectors.toList());
     }
 
+    public List<Movie> getEffectMovies() {
+        getAllMovies();
+        movieHashMap.entrySet().stream().filter(entry -> new File(entry.getValue().get(0).getLocalPath()).exists());
+        return movieHashMap.values().stream().flatMap(t -> t.stream()).collect(Collectors.toList());
+    }
+
     /**
      * 删除电影
      *
@@ -356,5 +363,19 @@ public class MovieService {
             movieDao.update(movie);
         }
         moduleMovies.get(MovieFileConstant.FAVORITE).remove(movie);
+    }
+
+    public List<Movie> getMoviesByType(String type, String data) {
+        List<Movie> movies = null;
+        List<Movie> cachcemovies = moduleMovies.values().stream().flatMap(t->t.stream()).collect(Collectors.toList());
+
+        if (type.equals("actor"))
+//            movies = moduleMovies.values().stream().filter(t -> t.getActors().stream().anyMatch(t2 -> t2.getActor_name().equals(data))).collect(Collectors.toList());
+            movies=cachcemovies.stream().filter(t -> t.getActors().stream().anyMatch(t2 -> t2.getActor_name().equals(data))).collect(Collectors.toList());
+        else if (type.equals("type"))
+            movies = cachcemovies.stream().filter(t -> t.getMovieTypes().stream().anyMatch(t2 -> t2.getMovieType().contains(data))).collect(Collectors.toList());
+        else if (type.equals("all"))
+            movies = getMoviesByKeyWord(data);
+        return movies;
     }
 }
