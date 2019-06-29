@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首页</title>
+    <link rel="stylesheet" href="stylesheets/bootstrap.min.css">
+    <link rel="stylesheet" href="/stylesheets/css/open-iconic-bootstrap.css">
+
+    <script src='/javascripts/jquery-3.3.1.min.js' type='text/javascript'></script>
+    <script src='javascripts/popper.min.js' type='text/javascript'></script>
+    <script src='javascripts/bootstrap.min.js' type="text/javascript"></script>
+    <link rel="stylesheet" href="/stylesheets/general.css">
+</head>
+<body>
+<link rel="stylesheet" href="/stylesheets/general.css"/>
+<title>首页</title>
+<div class="container-fluid component" style="background:#202020;height:100%"></div>
+<div class="container-fluid component rowContainer flexNoMarMargin title" style="background:#282828;z-index:999">
+    <div class="col-9 row" id="topDivLeft"><span class="col-1 oi oi-align-left icons" id="nav"></span>
+            <a class="col-1 offset-6" style="color:#52b54b" href="/">首页</a>
+            <a class="col-2" style="color:#52b54b" href="/movies.html?moduleName=favorite">我的最爱</a>
+    </div>
+    <div class="col-3 row" id="topDivRight">
+        <div class="input-group col-8">
+            <div class="input-group-prepend col-3"><span id="search">搜索</span></div>
+            <input class="col-8 offset-1" id="inputGroupFile01" type="text"/>
+        </div>
+        <span class="oi oi-star col-1 offset-re-1 icons" id="star"></span>
+    </div>
+</div>
+<div class="component flexNoMarMargin navLeft">
+    <div class="container-fluid"><span class="oi oi-home icons"></span><span class="navWord">首页</span></div>
+    <div class="container-fluid">
+        <div class="row"><a class="col-12" href="/setting.html"><span class="oi oi-star icons"></span><span
+                class="col-3">设置</span></a><a class="col-12"><span class="oi oi-star icons"></span><span class="col-3">电影</span></a><a
+                class="col-12"><span class="oi oi-star icons"></span><span class="col-3">电影</span></a><a class="col-12"><span
+                class="oi oi-star icons"></span><span class="col-3">电影</span></a></div>
+    </div>
+    <div class="container-fluid"></div>
+    <div class="container-fluid"></div>
+</div>
+<div class="component container-fluid" style="margin-top:100px">
+    <div class="row">
+        <div class="col-1 offset-1">
+            <h4 class="navWord">我的媒体</h4>
+        </div>
+    </div>
+    <div class="container-fluid">
+        <div class="row" id="contentDiv"></div>
+    </div>
+</div>
+<script src="/javascripts/tool.js" type="text/javascript"></script>
+<script src="/javascripts/Dy.js" type="text/javascript"></script>
+<script src="/javascripts/commomEvent.js" type="text/javascript"></script>
+<script src="/javascripts/index.js" type="text/javascript"></script>
+</body>
+</html>

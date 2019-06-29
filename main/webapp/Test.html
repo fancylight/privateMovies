@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Title</title>
+    　
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="./javascripts/popper.js"></script>
+    <script src="./javascripts/bootstrap.bundle.js"></script>
+    <link href="./stylesheets/bootstrap.min.css" rel="stylesheet">
+
+</head>
+<body>
+<div id="testDiv" style="width: 20pt;height: 30pt;background-color: rebeccapurple">123</div>
+</body>
+<script>
+    window.onload = function () {
+        var tt = document.documentElement.clientWidth;
+        // alert(tt);
+        $("#testDiv").text(tt)
+    }
+</script>
+<div class="dropdown">
+    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        Dropdown button
+    </button>
+    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+        <a class="dropdown-item" href="#">Action</a>
+        <a class="dropdown-item" href="#">Another action</a>
+        <a class="dropdown-item" href="#">Something else here</a>
+    </div>
+</div>
+<div style="margin: 0 auto;border: #0b2e13 solid;height: 300px"></div>
+<div class="button-group dropdown">
+    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+        Velg lokaler
+        <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu px-2" data-bind="foreach: bookable">
+        <li>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" checked="checked" data-bind="text: name"/>
+                <label class="form-check-label" data-bind="text: name">
+
+                </label>
+            </div>
+        </li>
+    </ul>
+
+</div>
+</html>
